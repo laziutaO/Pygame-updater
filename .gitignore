@@ -189,3 +189,4 @@ pyrightconfig.json
 .history
 .ionide
 .env
+.code-workspace

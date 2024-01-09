@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
-from colliders.collisions import collidepoly 
+from colliders.collisions import *
 
 class Game:
     def __init__(self):
@@ -32,7 +32,7 @@ class Game:
         
         self.player = PhysicsEntity(self, 'player', (100, 100), (15, 25))
         self.points = [(100, 100), (200, 50), (300, 150), (250, 300), (150, 350)]
-        self.polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
+        #self.polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
 
     
 
@@ -44,25 +44,26 @@ class Game:
             self.player.render(self.display)
 
             player_rect = pygame.Rect(*self.player.pos, *self.player.size)
-            polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
-            collision = collidepoly(self.points, player_rect)
-            if collision:
-                print("Rectangle collides with polygon")
+            #polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
+            circle1 = pygame.draw.circle(self.display, (255, 56, 0), (100, 100), 60)
+            circle2 = pygame.draw.circle(self.display, (255, 0, 0), (200, 100), 50)
+            collision = rect_collide_poly(self.points, player_rect)
+            rectcircle_collision = rect_collide_circle((200, 100), 50, player_rect)
+
+
+            if collide_circles((100, 100), 60, (200, 100), 50):
+                print("Circles collide")
             else:
                 print("No collision")
+            """if collision:
+                print("Rectangle collides with polygon")
+            else:
+                print("No collision")"""
             if player_rect.colliderect(self.collision_area):
                 pygame.draw.rect(self.display, (255, 0, 0), self.collision_area)
             else:
                 pygame.draw.rect(self.display, (0, 255, 0), self.collision_area)
-            """self.image_pos[1] += (self.movement[1] - self.movement[0])*4
-        
-            image_rect = pygame.Rect(*self.image_pos, *self.image.get_size())
-            if image_rect.colliderect(self.collision_area):
-                pygame.draw.rect(self.screen, (255, 0, 0), self.collision_area)
-            else:
-                pygame.draw.rect(self.screen, (0, 255, 0), self.collision_area)
 
-            self.screen.blit(self.image, self.image_pos)"""
             #circle = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), 50)
            
             for event in pygame.event.get():
