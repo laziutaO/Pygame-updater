@@ -1,11 +1,31 @@
 import pygame
+from typing import overload
 
-def rect_collide_poly(poly: list, rect: pygame.Rect):
+@overload
+def rect_collide_poly(polygon_coordinates: list, rect: pygame.Rect):
     return (
-    __check_point_collision(poly, rect.x, rect.y) or
-    __check_point_collision(poly, rect.x + rect.width, rect.y) or
-    __check_point_collision(poly, rect.x, rect.y + rect.height) or
-    __check_point_collision(poly, rect.x + rect.width, rect.y + rect.height)
+    __check_point_collision(polygon_coordinates, rect.x, rect.y) or
+    __check_point_collision(polygon_coordinates, rect.x + rect.width, rect.y) or
+    __check_point_collision(polygon_coordinates, rect.x, rect.y + rect.height) or
+    __check_point_collision(polygon_coordinates, rect.x + rect.width, rect.y + rect.height)
+)
+
+@overload
+def rect_collide_poly(polygon_coordinates: list, x, y, width, height):
+    return (
+    __check_point_collision(polygon_coordinates, x, y) or
+    __check_point_collision(polygon_coordinates, x + width, y) or
+    __check_point_collision(polygon_coordinates, x, y + height) or
+    __check_point_collision(polygon_coordinates, x + width, y + height)
+)
+
+@overload
+def rect_collide_poly(polygon_coordinates: list, coords: tuple, size: tuple):
+    return (
+    __check_point_collision(polygon_coordinates, coords[0], coords[1]) or
+    __check_point_collision(polygon_coordinates, coords[0] + size[0], coords[1]) or
+    __check_point_collision(polygon_coordinates, coords[0], coords[1] + size[1]) or
+    __check_point_collision(polygon_coordinates, coords[0] + size[0], coords[1] + size[1])
 )
 
 def rect_collide_circle(circle_center: tuple, radius: float, rect: pygame.Rect):
@@ -20,8 +40,8 @@ def rect_collide_circle(circle_center: tuple, radius: float, rect: pygame.Rect):
 
     return distance_squared <= (radius * radius)
 
-def point_collide_poly(poly: list, point: tuple):
-    return __check_point_collision(poly, point[0], point[1])
+def point_collide_poly(polygon_coordinates: list, point: tuple):
+    return __check_point_collision(polygon_coordinates, point[0], point[1])
 
 def collide_circles(circle1_center: tuple, radius1: float, circle2_center: tuple, radius2: float):
     x1, y1 = circle1_center

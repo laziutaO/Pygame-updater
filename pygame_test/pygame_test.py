@@ -45,20 +45,6 @@ class Game:
 
             player_rect = pygame.Rect(*self.player.pos, *self.player.size)
             #polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
-            circle1 = pygame.draw.circle(self.display, (255, 56, 0), (100, 100), 60)
-            circle2 = pygame.draw.circle(self.display, (255, 0, 0), (200, 100), 50)
-            collision = rect_collide_poly(self.points, player_rect)
-            rectcircle_collision = rect_collide_circle((200, 100), 50, player_rect)
-
-
-            if collide_circles((100, 100), 60, (200, 100), 50):
-                print("Circles collide")
-            else:
-                print("No collision")
-            """if collision:
-                print("Rectangle collides with polygon")
-            else:
-                print("No collision")"""
             if player_rect.colliderect(self.collision_area):
                 pygame.draw.rect(self.display, (255, 0, 0), self.collision_area)
             else:
