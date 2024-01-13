@@ -1,13 +1,16 @@
 import sys
 import pygame
-from classes.entities import PhysicsEntity
-from classes.utils import load_image
+from classes.entities import *
+from classes.utils import *
 import os
 from dotenv import load_dotenv
 load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
 from colliders.collisions import *
+from animation.animations import *
+
+BASE_IMG_PATH = 'test-data/images/'
 
 class Game:
     def __init__(self):
@@ -26,11 +29,14 @@ class Game:
         self.movement_hor = [False, False]
         self.movement_ver = [False, False]
         self.assets = {
-            'player': load_image('entities/player.png')
+            'player': load_image( BASE_IMG_PATH + 'entities/player.png'),
+            'player/idle': Animation(load_images(BASE_IMG_PATH + 'entities/player/idle'), 2),
+            'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
         }
+        print(self.assets)
         self.position = [100, 100]
         
-        self.player = PhysicsEntity(self, 'player', (100, 100), (15, 25))
+        self.player = Player(self, (100, 100), (15, 25))
         self.points = [(100, 100), (200, 50), (300, 150), (250, 300), (150, 350)]
         #self.polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
 
