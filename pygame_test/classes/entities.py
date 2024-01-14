@@ -17,6 +17,7 @@ class PhysicsEntity:
         if action != self.action:
             self.action = action
             self.animation = self.game.assets[self.type + '/' + self.action].copy()
+            #self.animation.add_callback_func(10, lambda: self.animation.pause_animation())
             #self.animation.set_backwards()
 
     def update(self, tilemap, movement = (0,0)):

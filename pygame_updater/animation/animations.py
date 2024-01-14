@@ -14,63 +14,81 @@ def load_images(path: str):
     return images
 
 class Animation:
-    def __init__(self, images, image_dur, loop = True, scale = 1):
-        self.images = images
-        self.loop = loop
-        self.image_duration = image_dur
-        self.done = False
-        self.frame = 0
-        self.pause = False
-        self.reset = False
-        self.scale = scale
-        self.backwards = False
+    def __init__(self, images: list, image_dur: int, loop = True, scale = 1):
+        self.__images = images
+        self.__loop = loop
+        self.__image_duration = image_dur
+        self.__frame = 0
+        self.__scale = scale
+        self.__done = False
+        self.__pause = False
+        self.__reset = False
+        self.__backwards = False
+        self.__callbacks = {}
 
     def update_frame(self):
-        last_frame = self.image_duration * len(self.images) - 1
+        last_frame = self.__image_duration * len(self.__images) - 1
 
-        if self.reset:
-            self.frame = 0
-            self.reset = False
+        if self.__reset:
+            self.__frame = 0
+            self.__reset = False
 
-        elif not self.done and not self.pause:
-            if self.loop:
-                if self.backwards:
-                    self.frame = (self.frame - 1) % (self.image_duration * len(self.images))
+        elif not self.__done and not self.__pause:
+            if self.__loop:
+                if self.__backwards:
+                    self.__frame = (self.__frame - 1) % (self.__image_duration * len(self.__images))
                 else:
-                    self.frame = (self.frame + 1) % (self.image_duration * len(self.images))
+                    self.__frame = (self.__frame + 1) % (self.__image_duration * len(self.__images))
             else:
-                if self.backwards:
-                    self.frame = max(self.frame - 1, 0)
-                    if self.frame == 0:
-                        self.done = True
+                if self.__backwards:
+                    self.__frame = max(self.__frame - 1, 0)
+                    if self.__frame == 0:
+                        self.__done = True
                 else:
-                    self.frame = min(self.frame + 1, last_frame)
-                    if self.frame == self.image_duration * len(self.images) - 1:
-                        self.done = True
+                    self.__frame = min(self.__frame + 1, last_frame)
+                    if self.__frame == self.__image_duration * len(self.__images) - 1:
+                        self.__done = True
+            
+            if self.__frame in self.__callbacks:
+                self.__callbacks[self.__frame]()
 
 
     def copy(self):
-        return Animation(self.images, self.image_duration, self.loop)
+        return Animation(self.__images, self.__image_duration, self.__loop)
     
     def anim_image(self):
-        image =  self.images[int(self.frame / self.image_duration)]
-        return pygame.transform.scale(image, (image.get_width() * self.scale, image.get_height() * self.scale))
-    
-    def is_finished(self):
-        return self.done
+        image =  self.__images[int(self.__frame / self.__image_duration)]
+        return pygame.transform.scale(image, (image.get_width() * self.__scale, image.get_height() * self.__scale))
 
     def pause_animation(self):
-        self.pause = True
+        self.__pause = True
 
     def resume_animation(self):
-        self.pause = False
+        self.__pause = False
 
     def reset_animation(self):
-        self.reset = True
+        self.__reset = True
 
     def set_backwards(self):
-        self.frame = len(self.images) * self.image_duration - 1
-        self.backwards = True
+        self.__frame = len(self.__images) * self.__image_duration - 1
+        self.__backwards = True
 
+    def add_callback_func(self, frame: int, func: callable):
+        if callable(func):
+            self.__callbacks[frame] = func
+        else:
+            raise Exception("The provided function is not valid to be used as a callback function.")
+        
+    def is_finished(self):
+        return self.__done
+    
+    def is_paused(self):
+        return self.__pause
+    
+    def is_backwards(self):
+        return self.__backwards
+
+    def get_frame(self):
+        return self.__frame
 
 
