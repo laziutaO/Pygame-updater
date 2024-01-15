@@ -9,6 +9,7 @@ MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
 from colliders.collisions import *
 from animation.animations import *
+from tilemaps.tilemap import *
 
 BASE_IMG_PATH = 'test-data/images/'
 
@@ -29,11 +30,13 @@ class Game:
         self.movement_hor = [False, False]
         self.movement_ver = [False, False]
         self.assets = {
+            'grass': load_images(BASE_IMG_PATH + 'tiles/grass'),
+            'stone': load_images(BASE_IMG_PATH + 'tiles/stone'),
             'player': load_image( BASE_IMG_PATH + 'entities/player.png'),
             'player/idle': Animation(load_images(BASE_IMG_PATH + 'entities/player/idle'), 2),
             'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
         }
-        print(self.assets)
+        self.tilemap = Tilemap(self, 16, 1)
         self.position = [100, 100]
         
         self.player = Player(self, (100, 100), (15, 25))
@@ -46,7 +49,7 @@ class Game:
         while True:
             self.display.fill((30, 130, 12))
             self.player.update((self.movement_hor[1] - self.movement_hor[0], self.movement_ver[1] - self.movement_ver[0]))
-            
+            self.tilemap.render(self.display)
             self.player.render(self.display)
 
             player_rect = pygame.Rect(*self.player.pos, *self.player.size)

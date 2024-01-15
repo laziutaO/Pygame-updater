@@ -87,6 +87,9 @@ class Animation:
     
     def is_backwards(self):
         return self.__backwards
+    
+    def is_running(self):
+        return not self.__done and not self.__pause
 
     def get_frame(self):
         return self.__frame

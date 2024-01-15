@@ -12,6 +12,7 @@ class PhysicsEntity:
         self.anim_offset = (-3, -3)
         self.flip = False
         self.set_action('idle')
+        self.velocity = [0, 0]
 
     def set_action(self, action):
         if action != self.action:
@@ -26,6 +27,8 @@ class PhysicsEntity:
         self.pos[0] += frame_movement[0]
         self.pos[1] += frame_movement[1]
 
+        self.gravity()
+        
         if movement[0] > 0:
             self.flip = False
         if movement[0] < 0:
@@ -39,6 +42,9 @@ class PhysicsEntity:
         else:
             surf.blit(pygame.transform.flip(self.animation.anim_image(), self.flip, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
         #surf.blit(self.game.assets['player'], self.pos)
+
+    def gravity(self):
+        self.velocity[1] = min(5, self.velocity[1] + 0.1)
 
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
