@@ -33,7 +33,7 @@ class Game:
             'grass': load_images(BASE_IMG_PATH + 'tiles/grass'),
             'stone': load_images(BASE_IMG_PATH + 'tiles/stone'),
             'player': load_image( BASE_IMG_PATH + 'entities/player.png'),
-            'player/idle': Animation(load_images(BASE_IMG_PATH + 'entities/player/idle'), 2),
+            'player/idle': Animation(load_images(BASE_IMG_PATH + 'entities/player/idle'), 5),
             'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
         }
         self.tilemap = Tilemap(self, 16, 1)
@@ -48,19 +48,19 @@ class Game:
     def run(self):
         while True:
             self.display.fill((30, 130, 12))
-            self.player.update((self.movement_hor[1] - self.movement_hor[0], self.movement_ver[1] - self.movement_ver[0]))
             self.tilemap.render(self.display)
+            self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
             self.player.render(self.display)
 
-            player_rect = pygame.Rect(*self.player.pos, *self.player.size)
+            #player_rect = pygame.Rect(*self.player.pos, *self.player.size)
             #polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
-            if player_rect.colliderect(self.collision_area):
+            """if player_rect.colliderect(self.collision_area):
                 pygame.draw.rect(self.display, (255, 0, 0), self.collision_area)
             else:
-                pygame.draw.rect(self.display, (0, 255, 0), self.collision_area)
+                pygame.draw.rect(self.display, (0, 255, 0), self.collision_area)"""
 
             #circle = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), 50)
-           
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
