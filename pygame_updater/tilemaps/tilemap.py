@@ -1,4 +1,5 @@
 import pygame
+import random
 from tilemaps.tile import Tile
 NEIGHBOR_OFFSETS = [(0, -1), (1, 0), (0, 1), (-1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1), (0, 0)]
 
@@ -11,11 +12,11 @@ class Tilemap:
 
     def render(self, surf, tile_data: dict = {}):
         for tile in self.__offgrid_tiles:
-            surf.blit(tile_data[tile.type][tile.variant], tile.position)
+            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), tile.position)
 
         for loc in self.__tilemap:
             tile = self.__tilemap[loc]
-            surf.blit(tile_data[tile.type][tile.variant], (tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size))
+            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size))
 
     def tiles_around(self, pos):
         tiles = []
@@ -34,23 +35,31 @@ class Tilemap:
                 rects.append(pygame.Rect(tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size, self.__tile_size, self.__tile_size))
         return rects
     
-    def fill_tilemap(self, start: tuple, end: tuple, tile_type: str, variant = 0):
+    def fill_tilemap(self, start: tuple, end: tuple, tile_type: str, variant = 0, rotation = 0):
         for x in range(start[0], end[0]):
             for y in range(start[1], end[1]):
-                self.__tilemap[str(x) + ';' + str(y)] = Tile(tile_type, (x, y), variant)
+                self.__tilemap[str(x) + ';' + str(y)] = Tile(tile_type, (x, y), variant, rotation)
 
-    def place_tile_offgrid(self, pos, tile_type, variant = 1):
-        self.__offgrid_tiles.append(Tile(tile_type, pos, variant))
+    def fill_tilemap_random(self, start: tuple, end: tuple, tile_types: list, variants: list = [0]):
+        for x in range(start[0], end[0]):
+            for y in range(start[1], end[1]):
+                self.__tilemap[str(x) + ';' + str(y)] = Tile(random.choice(tile_types), (x, y), random.choice(variants))
 
-    def place_tile_ongrid(self, pos, tile_type, variant = 1):
-        self.__tilemap[str(pos[0]) + ';' + str(pos[1])] = Tile(tile_type, pos, variant)
+    def place_tile_offgrid(self, pos, tile_type, variant = 0, rotation = 0):
+        self.__offgrid_tiles.append(Tile(tile_type, pos, variant, rotation))
 
-    def remove_tile(self, pos):
+    def place_tile_ongrid(self, pos, tile_type, variant =0, rotation = 0):
+        self.__tilemap[str(pos[0]) + ';' + str(pos[1])] = Tile(tile_type, pos, variant, rotation)
+
+    def remove_tile(self, pos: tuple):
         del self.__tilemap[str(pos[0]) + ';' + str(pos[1])]
     
-    def get_tile(self, pos):
+    def get_tile(self, pos: tuple):
         return self.__tilemap[str(pos[0]) + ';' + str(pos[1])]
     
+
+    
+
 
 
     

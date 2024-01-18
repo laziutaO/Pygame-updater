@@ -38,10 +38,11 @@ class Game:
             'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
         }
         self.tilemap = Tilemap(16, ['grass', 'stone'])
-        self.tilemap.fill_tilemap((3, 12), (8, 14), 'grass', variant=2)
-        self.tilemap.place_tile_ongrid((3, 11), 'stone')
-        self.tilemap.place_tile_offgrid((50, 50), 'stone')
-        self.tilemap.place_tile_offgrid((80, 50), 'grass')
+        self.tilemap.fill_tilemap((3, 12), (8, 14), 'grass', variant=0, rotation=90)
+        #self.tilemap.fill_tilemap_random((1, 3), (9, 6), ['grass', 'stone'], [0, 1, 2])
+        self.tilemap.place_tile_ongrid((3, 11), 'stone', 0, 180)
+        self.tilemap.place_tile_offgrid((50, 50), 'stone', 0, 45)
+        self.tilemap.place_tile_offgrid((80, 50), 'grass', 0, 45)
         self.position = [100, 100]
         
         self.player = Player(self, (100, 100), (15, 25))
