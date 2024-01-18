@@ -10,13 +10,13 @@ class Tilemap:
         self.__offgrid_tiles = []
         self.__colliding_tiles = colliding_tiles
 
-    def render(self, surf, tile_data: dict = {}):
+    def render(self, surf, tile_data: dict = {}, offset = (0,0)):
         for tile in self.__offgrid_tiles:
-            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), tile.position)
+            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] - offset[0], tile.position[1] - offset[1]))
 
         for loc in self.__tilemap:
             tile = self.__tilemap[loc]
-            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size))
+            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] * self.__tile_size - offset[0], tile.position[1] * self.__tile_size - offset[1]))
 
     def tiles_around(self, pos):
         tiles = []

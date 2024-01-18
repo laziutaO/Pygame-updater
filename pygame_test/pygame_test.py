@@ -10,7 +10,7 @@ sys.path.insert(1, MODULE_PATH)
 from colliders.collisions import *
 from animation.animations import *
 from tilemaps.tilemap import *
-from tilemaps.tile import *
+from physics.physics import *
 
 BASE_IMG_PATH = 'test-data/images/'
 
@@ -48,16 +48,20 @@ class Game:
         self.player = Player(self, (100, 100), (15, 25))
         self.points = [(100, 100), (200, 50), (300, 150), (250, 300), (150, 350)]
         #self.polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
-
+        self.scroll = [0, 0]
     
 
     def run(self):
         while True:
             self.display.fill((30, 130, 12))
-            self.tilemap.render(self.display, self.assets)
-            self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
-            self.player.render(self.display)
+            self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])/30
+            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1])/30
+            render_scroll = [int(self.scroll[0]), int(self.scroll[1])]
 
+            self.tilemap.render(self.display, self.assets, offset = render_scroll)
+            self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
+            self.player.render(self.display, offset = render_scroll)
+            
             #player_rect = pygame.Rect(*self.player.pos, *self.player.size)
             #polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
             """if player_rect.colliderect(self.collision_area):
@@ -77,7 +81,9 @@ class Game:
                     if event.key == pygame.K_RIGHT:
                         self.movement_hor[1] = True
                     if event.key == pygame.K_UP:
-                        self.player.velocity[1] = -3
+                        self.player.physics.jump(self.player, 5)
+                    if event.key == pygame.K_DOWN:
+                        self.player.physics.apply_impulse(self.player, (0.1, 0), self.player.mass)
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         self.movement_hor[0] = False

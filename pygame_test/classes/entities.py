@@ -1,8 +1,16 @@
 import pygame
+import os
+import sys
+from dotenv import load_dotenv
+load_dotenv()
+MODULE_PATH = os.getenv('MODULE_PATH')
+sys.path.insert(1, MODULE_PATH)
+from physics.physics import PhysicsForces
+
 
 
 class PhysicsEntity:
-    def __init__(self, game, e_type, pos, size):
+    def __init__(self, game, e_type, pos, size, mass = 1):
         self.game = game
         self.type = e_type
         self.pos = list(pos)
@@ -13,6 +21,8 @@ class PhysicsEntity:
         self.flip = False
         self.set_action('idle')
         self.collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
+        self.physics = PhysicsForces(self)
+        self.mass = mass
 
     def rect(self):
         return pygame.Rect(*self.pos, *self.size)
@@ -50,10 +60,10 @@ class PhysicsEntity:
                 if frame_movement[1] < 0:
                     entity_rect.top = rect.bottom
                     self.collisions['top'] = True
-                self.pos[1] = entity_rect.y +8
+                self.pos[1] = entity_rect.y + 8
 
-        self.gravity()
-
+        self.physics.gravity(self)
+        #self.physics.move_towards(self, (10, 10), 0.5)
         if self.collisions['top'] or self.collisions['bottom']:
             self.velocity[1] = 0
 
@@ -70,8 +80,6 @@ class PhysicsEntity:
         else:
             surf.blit(pygame.transform.flip(self.animation.anim_image(), self.flip, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
 
-    def gravity(self):
-        self.velocity[1] = min(5, self.velocity[1] + 0.1)
 
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
