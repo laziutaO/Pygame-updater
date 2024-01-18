@@ -1,41 +1,56 @@
 import pygame
+from tilemaps.tile import Tile
 NEIGHBOR_OFFSETS = [(0, -1), (1, 0), (0, 1), (-1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1), (0, 0)]
-PHYSICS_TILES = {'grass', 'stone'}
 
 class Tilemap:
-    def __init__(self, game, tile_size = 16, scale = 1):
+    def __init__(self, tile_size:int = 16, colliding_tiles: list = []):
         self.__tile_size = tile_size
-        self.tilemap = {}
-        self.__scale = scale
-        self.game = game
-        #self._offgrid_tiles = [{'type' : 'grass', 'pos' : (3, 10), 'variant': 1}]
+        self.__tilemap = {}
         self.__offgrid_tiles = []
+        self.__colliding_tiles = colliding_tiles
 
-        for i in range(10):
-            self.tilemap[str(3 + i) + ';10'] = {'type' : 'grass', 'pos' : (3 + i, 10), 'variant': 1}
-            self.tilemap['10;' + str(5 + i)] = {'type' : 'stone', 'pos' : (10, 5 + i), 'variant': 1}  
-
-    def render(self, surf):
+    def render(self, surf, tile_data: dict = {}):
         for tile in self.__offgrid_tiles:
-            surf.blit(self.game.assets[tile['type']][tile['variant']], tile['pos'])
+            surf.blit(tile_data[tile.type][tile.variant], tile.position)
 
-        for loc in self.tilemap:
-            tile = self.tilemap[loc]
-            surf.blit(self.game.assets[tile['type']][tile['variant']], (tile['pos'][0] * self.__tile_size, tile['pos'][1] * self.__tile_size))
+        for loc in self.__tilemap:
+            tile = self.__tilemap[loc]
+            surf.blit(tile_data[tile.type][tile.variant], (tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size))
 
     def tiles_around(self, pos):
         tiles = []
         tile_location = (int(pos[0] // self.__tile_size), int(pos[1] // self.__tile_size))
         for offset in NEIGHBOR_OFFSETS:
             check_location = str(tile_location[0] + offset[0]) + ';' + str(tile_location[1] + offset[1])
-            if check_location in self.tilemap:
-                tiles.append(self.tilemap[check_location])
+            if check_location in self.__tilemap:
+                tiles.append(self.__tilemap[check_location])
         
         return tiles
     
     def physics_rects_around(self, pos):
         rects = []
         for tile in self.tiles_around(pos):
-            if tile['type'] in PHYSICS_TILES:
-                rects.append(pygame.Rect(tile['pos'][0] * self.__tile_size, tile['pos'][1] * self.__tile_size, self.__tile_size, self.__tile_size))
+            if tile.type in self.__colliding_tiles:
+                rects.append(pygame.Rect(tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size, self.__tile_size, self.__tile_size))
         return rects
+    
+    def fill_tilemap(self, start: tuple, end: tuple, tile_type: str, variant = 0):
+        for x in range(start[0], end[0]):
+            for y in range(start[1], end[1]):
+                self.__tilemap[str(x) + ';' + str(y)] = Tile(tile_type, (x, y), variant)
+
+    def place_tile_offgrid(self, pos, tile_type, variant = 1):
+        self.__offgrid_tiles.append(Tile(tile_type, pos, variant))
+
+    def place_tile_ongrid(self, pos, tile_type, variant = 1):
+        self.__tilemap[str(pos[0]) + ';' + str(pos[1])] = Tile(tile_type, pos, variant)
+
+    def remove_tile(self, pos):
+        del self.__tilemap[str(pos[0]) + ';' + str(pos[1])]
+    
+    def get_tile(self, pos):
+        return self.__tilemap[str(pos[0]) + ';' + str(pos[1])]
+    
+
+
+    

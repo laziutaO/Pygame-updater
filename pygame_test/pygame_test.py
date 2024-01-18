@@ -10,6 +10,7 @@ sys.path.insert(1, MODULE_PATH)
 from colliders.collisions import *
 from animation.animations import *
 from tilemaps.tilemap import *
+from tilemaps.tile import *
 
 BASE_IMG_PATH = 'test-data/images/'
 
@@ -36,7 +37,11 @@ class Game:
             'player/idle': Animation(load_images(BASE_IMG_PATH + 'entities/player/idle'), 5),
             'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
         }
-        self.tilemap = Tilemap(self, 16, 1)
+        self.tilemap = Tilemap(16, ['grass', 'stone'])
+        self.tilemap.fill_tilemap((3, 12), (8, 14), 'grass', variant=2)
+        self.tilemap.place_tile_ongrid((3, 11), 'stone')
+        self.tilemap.place_tile_offgrid((50, 50), 'stone')
+        self.tilemap.place_tile_offgrid((80, 50), 'grass')
         self.position = [100, 100]
         
         self.player = Player(self, (100, 100), (15, 25))
@@ -48,7 +53,7 @@ class Game:
     def run(self):
         while True:
             self.display.fill((30, 130, 12))
-            self.tilemap.render(self.display)
+            self.tilemap.render(self.display, self.assets)
             self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
             self.player.render(self.display)
 
@@ -71,18 +76,12 @@ class Game:
                     if event.key == pygame.K_RIGHT:
                         self.movement_hor[1] = True
                     if event.key == pygame.K_UP:
-                        self.movement_ver[0] = True
-                    if event.key == pygame.K_DOWN:
-                        self.movement_ver[1] = True
+                        self.player.velocity[1] = -3
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         self.movement_hor[0] = False
                     if event.key == pygame.K_RIGHT:
                         self.movement_hor[1] = False
-                    if event.key == pygame.K_UP:
-                        self.movement_ver[0] = False
-                    if event.key == pygame.K_DOWN:
-                        self.movement_ver[1] = False
             
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()
