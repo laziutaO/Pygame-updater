@@ -21,7 +21,7 @@ class PhysicsEntity:
         self.flip = False
         self.set_action('idle')
         self.collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
-        self.physics = PhysicsForces(self)
+        self.physics = PhysicsForces()
         self.mass = mass
 
     def rect(self):
@@ -62,7 +62,7 @@ class PhysicsEntity:
                     self.collisions['top'] = True
                 self.pos[1] = entity_rect.y + 8
 
-        self.physics.gravity(self)
+        #self.physics.gravity(self)
         #self.physics.move_towards(self, (10, 10), 0.5)
         if self.collisions['top'] or self.collisions['bottom']:
             self.velocity[1] = 0
@@ -80,6 +80,10 @@ class PhysicsEntity:
         else:
             surf.blit(pygame.transform.flip(self.animation.anim_image(), self.flip, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
 
+    def update_position(self, pos, offset = (0,0)):
+        self.pos = list(pos)
+        self.render(self.game.display, offset)
+
 
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
@@ -92,5 +96,17 @@ class Player(PhysicsEntity):
             self.set_action('run')
         else:
             self.set_action('idle')
+
+class Enemy(PhysicsEntity):
+    def __init__(self, game, pos, size):
+        super().__init__(game, 'enemy', pos, size)
+
+    def update(self, tilemap, movement=(0,0)):
+        super().update(tilemap, movement)
+
+"""        if movement[0] != 0:
+            self.set_action('run')
+        else:
+            self.set_action('idle')"""
 
         

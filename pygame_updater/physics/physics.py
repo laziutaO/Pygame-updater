@@ -1,9 +1,5 @@
-import pygame
 
 class PhysicsForces:
-    def __init__(self, entity):
-        self.entity = entity
-
     def gravity(self, entity, acceleration = 0.1, terminal_velocity = 5):
         if entity.velocity[1] < terminal_velocity:
             entity.velocity[1] += acceleration

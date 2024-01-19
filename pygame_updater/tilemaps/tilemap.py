@@ -56,7 +56,13 @@ class Tilemap:
     
     def get_tile(self, pos: tuple):
         return self.__tilemap[str(pos[0]) + ';' + str(pos[1])]
-    
+
+    def is_occupied_tile(self, pos):
+        tile_location = (int(pos[0] // self.__tile_size), int(pos[1] // self.__tile_size))
+        check_location = str(tile_location[0]) + ';' + str(tile_location[1])
+        if(check_location in self.__tilemap):
+            print("Tile is occupied")
+        return check_location in self.__tilemap 
 
     
 
