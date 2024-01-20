@@ -40,14 +40,15 @@ class Game:
         }
         self.tilemap = Tilemap(16, ['grass', 'stone'])
         self.tilemap.fill_tilemap((3, 12), (8, 14), 'grass', variant=0, rotation=0)
+        self.tilemap.fill_tilemap((10, 5), (11, 15), 'grass', variant=1, rotation=0)
         #self.tilemap.fill_tilemap_random((1, 3), (9, 6), ['grass', 'stone'], [0, 1, 2])
         self.tilemap.place_tile_ongrid((3, 11), 'stone', 0, 180)
         self.tilemap.place_tile_offgrid((50, 50), 'stone', 0, 45)
         self.tilemap.place_tile_offgrid((80, 50), 'grass', 0, 45)
         self.position = [100, 100]
         
-        self.player = Player(self, (80, 0), (15, 25))
-        self.astar = SearchAction(self.tilemap)
+        self.player = Player(self, (30, 110), (15, 25))
+        self.astar = SearchAction(self.player.size[0], self.player.size[1], self.tilemap)
         self.points = [(100, 100), (200, 50), (300, 150), (250, 300), (150, 350)]
         #self.polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
         self.scroll = [0, 0]
@@ -64,7 +65,7 @@ class Game:
             self.tilemap.render(self.display, self.assets, offset = render_scroll)
             self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
             self.player.render(self.display, offset = render_scroll)
-            self.player.update_position(self.astar.get_next_position(self.player.pos, (80, 300)), offset = render_scroll)
+            self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
             
             #player_rect = pygame.Rect(*self.player.pos, *self.player.size)
             #polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
