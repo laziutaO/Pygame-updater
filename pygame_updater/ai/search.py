@@ -37,7 +37,7 @@ class SearchAction:
             total_path.append(current)
         return total_path[::-1]
 
-    def __search(self, start, end):
+    def search(self, start:tuple, end:tuple):
         start = tuple(start)
         end = tuple(end)
         open_list = [start]
@@ -73,7 +73,7 @@ class SearchAction:
     
     def get_next_position(self, start:tuple, end:tuple):
         if self.path_index == len(self.path):
-            self.path = self.__search(start, end)
+            self.path = self.search(start, end)
             self.path_index = 0
             if self.path == None:
                 self.finished = True
