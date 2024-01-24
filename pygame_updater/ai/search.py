@@ -1,5 +1,7 @@
+from tilemaps.tilemap import Tilemap
+
 class SearchAction:
-    def __init__(self, entity_width: int, entity_height: int, tilemap = None):
+    def __init__(self, entity_width: int, entity_height: int, tilemap: Tilemap = None):
         self.path = []
         self.path_index = 0
         self.finished = False

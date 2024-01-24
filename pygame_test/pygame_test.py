@@ -23,9 +23,6 @@ class Game:
         self.display = pygame.Surface((320, 240))
         self.clock = pygame.time.Clock()
 
-        """self.image = pygame.image.load('test-data/images/clouds/cloud_1.png')
-        self.image.set_colorkey((0,0,0))
-        self.image_pos = [100, 100]"""
         self.collision_area = pygame.Rect(50, 50, 20, 20)
         #self.image = pygame.transform.scale(self.image, (200, 200))
         self.movement_hor = [False, False]
@@ -38,6 +35,7 @@ class Game:
             'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
             
         }
+        #tilemap test
         self.tilemap = Tilemap(16, ['grass', 'stone'])
         self.tilemap.fill_tilemap((3, 12), (8, 14), 'grass', variant=0, rotation=0)
         self.tilemap.fill_tilemap((10, 5), (11, 15), 'grass', variant=1, rotation=0)
@@ -45,11 +43,13 @@ class Game:
         self.tilemap.place_tile_ongrid((3, 11), 'stone', 0, 180)
         self.tilemap.place_tile_offgrid((50, 50), 'stone', 0, 45)
         self.tilemap.place_tile_offgrid((80, 50), 'grass', 0, 45)
-        self.position = [100, 100]
+        print(self.tilemap.get_tile((3, 11)).position)
         
-        self.player = Player(self, (30, 110), (15, 25))
+        
+        self.player = Player(self, (80, 110), (15, 25))
         self.astar = SearchAction(self.player.size[0], self.player.size[1], self.tilemap)
-        self.points = [(100, 100), (200, 50), (300, 150), (250, 300), (150, 350)]
+        self.collision = ComplexCollision()
+        
         #self.polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
         self.scroll = [0, 0]
     
@@ -64,18 +64,35 @@ class Game:
 
             self.tilemap.render(self.display, self.assets, offset = render_scroll)
             self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
+            #ai test
+            #self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
             self.player.render(self.display, offset = render_scroll)
-            self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
             
-            #player_rect = pygame.Rect(*self.player.pos, *self.player.size)
-            #polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), self.points)
-            """if player_rect.colliderect(self.collision_area):
-                pygame.draw.rect(self.display, (255, 0, 0), self.collision_area)
-            else:
-                pygame.draw.rect(self.display, (0, 255, 0), self.collision_area)"""
+            
+            player_rect = pygame.Rect(*self.player.pos, *self.player.size)
 
-            #circle = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), 50)
-            
+            #testing polygon collision
+            """points = [(100, 100), (120, 120), (120, 150), (170, 120), (140, 60)]
+            polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), points)
+            if self.collision.rect_collide_poly(points, self.player.rect()):
+                print("player collided with polygon")"""
+
+            #testing circle collision
+            """radius1 = 50
+            radius2 = 30
+            circle1 = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), radius1)
+            circle2 = pygame.draw.circle(self.display, (255, 255, 0), (120, 100), radius2)
+            if self.collision.collide_circles(circle1.center, radius1, circle2.center, radius2):
+                print("circles collided")"""
+
+            #testing rect circle collision
+            """radius = 50
+            circle = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), radius)
+            rect = pygame.draw.rect(self.display, (255, 255, 0), (120, 100, 50, 50))
+            if self.collision.rect_collide_circle(circle.center, radius, rect):
+                print("rect and circle collided")"""
+
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -86,9 +103,9 @@ class Game:
                     if event.key == pygame.K_RIGHT:
                         self.movement_hor[1] = True
                     if event.key == pygame.K_UP:
-                        self.player.physics.jump(self.player, 3)
+                        self.player.physics.jump(self.player.velocity, 3)
                     if event.key == pygame.K_DOWN:
-                        self.player.physics.apply_impulse(self.player, (0.1, 0), self.player.mass)
+                        self.player.velocity = self.player.physics.apply_impulse(self.player.velocity, (0.1, 0), self.player.mass)
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         self.movement_hor[0] = False

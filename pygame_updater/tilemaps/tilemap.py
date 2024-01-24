@@ -18,7 +18,7 @@ class Tilemap:
             tile = self.__tilemap[loc]
             surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] * self.__tile_size - offset[0], tile.position[1] * self.__tile_size - offset[1]))
 
-    def tiles_around(self, pos):
+    def __tiles_around(self, pos):
         tiles = []
         tile_location = (int(pos[0] // self.__tile_size), int(pos[1] // self.__tile_size))
         for offset in NEIGHBOR_OFFSETS:
@@ -30,7 +30,7 @@ class Tilemap:
     
     def physics_rects_around(self, pos):
         rects = []
-        for tile in self.tiles_around(pos):
+        for tile in self.__tiles_around(pos):
             if tile.type in self.__colliding_tiles:
                 rects.append(pygame.Rect(tile.position[0] * self.__tile_size, tile.position[1] * self.__tile_size, self.__tile_size, self.__tile_size))
         return rects
@@ -48,7 +48,7 @@ class Tilemap:
     def place_tile_offgrid(self, pos, tile_type, variant = 0, rotation = 0):
         self.__offgrid_tiles.append(Tile(tile_type, pos, variant, rotation))
 
-    def place_tile_ongrid(self, pos, tile_type, variant =0, rotation = 0):
+    def place_tile_ongrid(self, pos, tile_type, variant = 0, rotation = 0):
         self.__tilemap[str(pos[0]) + ';' + str(pos[1])] = Tile(tile_type, pos, variant, rotation)
 
     def remove_tile(self, pos: tuple):
@@ -60,8 +60,6 @@ class Tilemap:
     def is_occupied_tile(self, pos):
         tile_location = (int(pos[0] // self.__tile_size), int(pos[1] // self.__tile_size))
         check_location = str(tile_location[0]) + ';' + str(tile_location[1])
-        if(check_location in self.__tilemap):
-            print("Tile is occupied")
         return check_location in self.__tilemap 
 
     

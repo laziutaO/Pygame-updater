@@ -6,10 +6,10 @@ def load_image(path: str, colorkey = (0,0,0)):
     image.set_colorkey(colorkey)
     return image
 
-def load_images(path: str):
+def load_images(path: str, colorkey = (0,0,0)):
     images = []
     for image_name in sorted(os.listdir(path)):
-        image = load_image(path + '/' + image_name)
+        image = load_image(path + '/' + image_name, colorkey)
         images.append(image)
     return images
 
