@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
-from physics.physics import PhysicsForces
-
+from pygame_updater.physics.physics import PhysicsForces
 
 
 class PhysicsEntity:

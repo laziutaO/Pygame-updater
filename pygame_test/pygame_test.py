@@ -1,16 +1,18 @@
 import sys
+sys.path.append("/home/oleksii/kpi/diploma/soft/Pygame-updater")
 import pygame
 from classes.entities import *
 import os
+import pygame_updater
 from dotenv import load_dotenv
 load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
-from colliders.collisions import *
-from animation.animations import *
-from tilemaps.tilemap import *
-from physics.physics import *
-from ai.search import *
+from pygame_updater.colliders.collisions import *
+from pygame_updater.animation.animations import *
+from pygame_updater.tilemaps.tilemap import *
+from pygame_updater.physics.physics import *
+from pygame_updater.ai.search import *
 
 BASE_IMG_PATH = 'test-data/images/'
 
@@ -44,7 +46,6 @@ class Game:
         self.tilemap.place_tile_offgrid((50, 50), 'stone', 0, 45)
         self.tilemap.place_tile_offgrid((80, 50), 'grass', 0, 45)
         print(self.tilemap.get_tile((3, 11)).position)
-        
         
         self.player = Player(self, (80, 110), (15, 25))
         self.astar = SearchAction(self.player.size[0], self.player.size[1], self.tilemap)

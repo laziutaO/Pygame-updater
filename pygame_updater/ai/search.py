@@ -1,4 +1,4 @@
-from tilemaps.tilemap import Tilemap
+from ..tilemaps.tilemap import Tilemap
 
 class SearchAction:
     def __init__(self, entity_width: int, entity_height: int, tilemap: Tilemap = None):

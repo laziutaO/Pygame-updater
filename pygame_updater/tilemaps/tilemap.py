@@ -1,6 +1,6 @@
 import pygame
 import random
-from tilemaps.tile import Tile
+from pygame_updater.tilemaps.tile import Tile
 NEIGHBOR_OFFSETS = [(0, -1), (1, 0), (0, 1), (-1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1), (0, 0)]
 
 class Tilemap:
