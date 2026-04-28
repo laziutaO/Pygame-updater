@@ -1,6 +1,6 @@
 import pygame
 import random
-from pygame_updater.tilemaps.tile import Tile
+from .tile import Tile
 NEIGHBOR_OFFSETS = [(0, -1), (1, 0), (0, 1), (-1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1), (0, 0)]
 
 class Tilemap:
@@ -12,11 +12,13 @@ class Tilemap:
 
     def render(self, surf, tile_data: dict = {}, offset = (0,0)):
         for tile in self.__offgrid_tiles:
-            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] - offset[0], tile.position[1] - offset[1]))
+            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), 
+                      (tile.position[0] - offset[0], tile.position[1] - offset[1]))
 
         for loc in self.__tilemap:
             tile = self.__tilemap[loc]
-            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), (tile.position[0] * self.__tile_size - offset[0], tile.position[1] * self.__tile_size - offset[1]))
+            surf.blit(pygame.transform.rotate(tile_data[tile.type][tile.variant], tile.rotation), 
+                      (tile.position[0] * self.__tile_size - offset[0], tile.position[1] * self.__tile_size - offset[1]))
 
     def __tiles_around(self, pos):
         tiles = []

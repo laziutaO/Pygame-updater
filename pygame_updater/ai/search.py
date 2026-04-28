@@ -1,3 +1,5 @@
+import math
+import heapq
 from ..tilemaps.tilemap import Tilemap
 
 class SearchAction:
@@ -10,7 +12,12 @@ class SearchAction:
         self.entity_height = entity_height
 
     def __heuristic(self, start, end):
-        return abs(start[0] - end[0]) + abs(start[1] - end[1])
+        dx = start[0] - end[0]
+        dy = start[1] - end[1]
+        return math.sqrt(dx * dx + dy * dy)
+
+    def __step_cost(self, current, neighbor):
+        return math.sqrt(2) if current[0] != neighbor[0] and current[1] != neighbor[1] else 1.0
 
     def __neighbors(self, current):
         neighbors = []
@@ -18,19 +25,18 @@ class SearchAction:
             for y in range(-1, 2):
                 if x == 0 and y == 0:
                     continue
-                bottom_left = (current[0] + x, current[1] + y + self.entity_height)
-                top_right = (current[0] + x + self.entity_width, current[1] + y)
-                bottom_right = (top_right[0], bottom_left[1])
                 neighbor = (current[0] + x, current[1] + y)
+                bottom_left = (neighbor[0], neighbor[1] + self.entity_height)
+                top_right = (neighbor[0] + self.entity_width, neighbor[1])
+                bottom_right = (top_right[0], bottom_left[1])
                 if self.tilemap is None:
                     neighbors.append(neighbor)
-                elif not self.tilemap.is_occupied_tile(neighbor) and not self.tilemap.is_occupied_tile(bottom_left) and not self.tilemap.is_occupied_tile(top_right) and not self.tilemap.is_occupied_tile(bottom_right):
+                elif not self.tilemap.is_occupied_tile(neighbor) \
+                    and not self.tilemap.is_occupied_tile(bottom_left) \
+                    and not self.tilemap.is_occupied_tile(top_right) \
+                    and not self.tilemap.is_occupied_tile(bottom_right):
                     neighbors.append(neighbor)
-
         return neighbors
-
-    def __lowest_f_score(self, open_list, f_score):
-        return min(open_list, key=lambda node: f_score[node])
 
     def __reconstruct_path(self, came_from, current):
         total_path = [current]
@@ -39,47 +45,44 @@ class SearchAction:
             total_path.append(current)
         return total_path[::-1]
 
-    def search(self, start:tuple, end:tuple):
+    def search(self, start: tuple, end: tuple):
         start = tuple(start)
         end = tuple(end)
-        open_list = [start]
-        closed_list = set()
+        open_heap = [(self.__heuristic(start, end), start)]
+        visited = set()
         came_from = {}
-        g_score = {start: 0}
-        f_score = {start: self.__heuristic(start, end)}
+        g_score = {start: 0.0}
 
-        while open_list:
-            current = self.__lowest_f_score(open_list, f_score)
+        while open_heap:
+            _, current = heapq.heappop(open_heap)
+
+            if current in visited:
+                continue
+            visited.add(current)
 
             if current == end:
                 return self.__reconstruct_path(came_from, current)
 
-            open_list.remove(current)
-            closed_list.add(current)
-
             for neighbor in self.__neighbors(current):
-                if neighbor in closed_list:
+                if neighbor in visited:
                     continue
-
-                tentative_g_score = g_score[current] + self.__heuristic(current, neighbor)
-
-                if neighbor not in open_list or tentative_g_score < g_score[neighbor]:
+                tentative_g = g_score[current] + self.__step_cost(current, neighbor)
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:
                     came_from[neighbor] = current
-                    g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = g_score[neighbor] + self.__heuristic(neighbor, end)
+                    g_score[neighbor] = tentative_g
+                    heapq.heappush(open_heap, (tentative_g + self.__heuristic(neighbor, end), neighbor))
 
-                    if neighbor not in open_list:
-                        open_list.append(neighbor)
+        return None
 
-        return None 
-    
-    def get_next_position(self, start:tuple, end:tuple):
-        if self.path_index == len(self.path):
-            self.path = self.search(start, end)
-            self.path_index = 0
-            if self.path == None:
+    def get_next_position(self, start: tuple, end: tuple):
+        if self.path_index >= len(self.path):
+            self.finished = False
+            new_path = self.search(start, end)
+            if new_path is None:
                 self.finished = True
+                self.path = []
                 return start
+            self.path = new_path
+            self.path_index = 0
         self.path_index += 1
         return self.path[self.path_index - 1]
-    

@@ -70,7 +70,6 @@ class PhysicsEntity:
             self.flip = False
         if movement[0] < 0:
             self.flip = True
-        self.animation.pause_animation()
         #self.animation.set_backwards()
         self.animation.update_frame()
 

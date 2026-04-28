@@ -3,11 +3,15 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+venv/
+pygame-upd-venv/
+__pycache__/
+*.pyc
 # C extensions
 *.so
 
 # Distribution / packaging
+test-data1/
 .Python
 build/
 develop-eggs/

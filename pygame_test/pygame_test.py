@@ -14,7 +14,8 @@ from pygame_updater.tilemaps.tilemap import *
 from pygame_updater.physics.physics import *
 from pygame_updater.ai.search import *
 
-BASE_IMG_PATH = 'test-data/images/'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_IMG_PATH = os.path.join(BASE_DIR, 'test-data/images/')
 
 class Game:
     def __init__(self):
@@ -24,7 +25,7 @@ class Game:
         self.screen = pygame.display.set_mode((640, 480))
         self.display = pygame.Surface((320, 240))
         self.clock = pygame.time.Clock()
-
+        
         self.collision_area = pygame.Rect(50, 50, 20, 20)
         #self.image = pygame.transform.scale(self.image, (200, 200))
         self.movement_hor = [False, False]
@@ -39,7 +40,7 @@ class Game:
         }
         #tilemap test
         self.tilemap = Tilemap(16, ['grass', 'stone'])
-        self.tilemap.fill_tilemap((3, 12), (8, 14), 'grass', variant=0, rotation=0)
+        self.tilemap.fill_tilemap((3, 12), (8, 18), 'grass', variant=0, rotation=0)
         self.tilemap.fill_tilemap((10, 5), (11, 15), 'grass', variant=1, rotation=0)
         #self.tilemap.fill_tilemap_random((1, 3), (9, 6), ['grass', 'stone'], [0, 1, 2])
         self.tilemap.place_tile_ongrid((3, 11), 'stone', 0, 180)
@@ -57,7 +58,7 @@ class Game:
 
     def run(self):
         while True:
-            self.display.fill((30, 130, 12))
+            self.display.fill((50, 130, 12))
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])/10
             self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1])/10
@@ -66,33 +67,10 @@ class Game:
             self.tilemap.render(self.display, self.assets, offset = render_scroll)
             self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
             #ai test
-            #self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
+            self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
             self.player.render(self.display, offset = render_scroll)
             
-            
             player_rect = pygame.Rect(*self.player.pos, *self.player.size)
-
-            #testing polygon collision
-            """points = [(100, 100), (120, 120), (120, 150), (170, 120), (140, 60)]
-            polygon_collider = pygame.draw.polygon(self.display, (255, 0, 0), points)
-            if self.collision.rect_collide_poly(points, self.player.rect()):
-                print("player collided with polygon")"""
-
-            #testing circle collision
-            """radius1 = 50
-            radius2 = 30
-            circle1 = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), radius1)
-            circle2 = pygame.draw.circle(self.display, (255, 255, 0), (120, 100), radius2)
-            if self.collision.collide_circles(circle1.center, radius1, circle2.center, radius2):
-                print("circles collided")"""
-
-            #testing rect circle collision
-            """radius = 50
-            circle = pygame.draw.circle(self.display, (255, 0, 0), (100, 100), radius)
-            rect = pygame.draw.rect(self.display, (255, 255, 0), (120, 100, 50, 50))
-            if self.collision.rect_collide_circle(circle.center, radius, rect):
-                print("rect and circle collided")"""
-
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
