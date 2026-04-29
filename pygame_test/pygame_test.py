@@ -15,7 +15,7 @@ from pygame_updater.physics.physics import *
 from pygame_updater.ai.search import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE_IMG_PATH = os.path.join(BASE_DIR, 'test-data/images/')
+BASE_IMG_PATH = os.path.join(BASE_DIR, 'test-data1/')
 
 class Game:
     def __init__(self):
@@ -31,22 +31,20 @@ class Game:
         self.movement_hor = [False, False]
         self.movement_ver = [False, False]
         self.assets = {
-            'grass': load_images(BASE_IMG_PATH + 'tiles/grass'),
-            'stone': load_images(BASE_IMG_PATH + 'tiles/stone'),
-            'player': load_image( BASE_IMG_PATH + 'entities/player.png'),
-            'player/idle': Animation(load_images(BASE_IMG_PATH + 'entities/player/idle'), 5),
-            'player/run': Animation(load_images(BASE_IMG_PATH + 'entities/player/run'), 5),
+            'grass': load_images(BASE_IMG_PATH + 'images/tiles-objects/1 Tiles'),
+            #'stone': load_images(BASE_IMG_PATH + 'images/tiels-objects/Tiles/Tile_02.png'),
+            'player': load_image( BASE_IMG_PATH + 'player/idle/row-1-column-1.png'),
+            'player/idle': Animation(load_images(BASE_IMG_PATH + 'player/idle'), 5),
+            'player/run': Animation(load_images(BASE_IMG_PATH + 'player/run'), 5),
             
         }
         #tilemap test
-        self.tilemap = Tilemap(16, ['grass', 'stone'])
+        self.tilemap = Tilemap(16, ['grass'])
         self.tilemap.fill_tilemap((3, 12), (8, 18), 'grass', variant=0, rotation=0)
         self.tilemap.fill_tilemap((10, 5), (11, 15), 'grass', variant=1, rotation=0)
         #self.tilemap.fill_tilemap_random((1, 3), (9, 6), ['grass', 'stone'], [0, 1, 2])
-        self.tilemap.place_tile_ongrid((3, 11), 'stone', 0, 180)
-        self.tilemap.place_tile_offgrid((50, 50), 'stone', 0, 45)
-        self.tilemap.place_tile_offgrid((80, 50), 'grass', 0, 45)
-        print(self.tilemap.get_tile((3, 11)).position)
+        
+     
         
         self.player = Player(self, (80, 110), (15, 25))
         self.astar = SearchAction(self.player.size[0], self.player.size[1], self.tilemap)
@@ -67,7 +65,7 @@ class Game:
             self.tilemap.render(self.display, self.assets, offset = render_scroll)
             self.player.update(self.tilemap, (self.movement_hor[1] - self.movement_hor[0], 0))
             #ai test
-            self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
+            #self.player.update_position(self.astar.get_next_position(self.player.pos, (200, 110)), offset = render_scroll)
             self.player.render(self.display, offset = render_scroll)
             
             player_rect = pygame.Rect(*self.player.pos, *self.player.size)

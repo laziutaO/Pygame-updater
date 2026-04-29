@@ -54,7 +54,7 @@ class Animation:
 
 
     def copy(self):
-        return Animation(self.__images, self.__image_duration, self.__loop)
+        return Animation(self.__images, self.__image_duration, self.__loop, self.__scale)
     
     def anim_image(self):
         image =  self.__images[int(self.__frame / self.__image_duration)]

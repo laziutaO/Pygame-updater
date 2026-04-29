@@ -9,14 +9,15 @@ from pygame_updater.physics.physics import PhysicsForces
 
 
 class PhysicsEntity:
-    def __init__(self, game, e_type, pos, size, mass = 1):
+    def __init__(self, game, e_type, pos, size, mass=1):
         self.game = game
         self.type = e_type
         self.pos = list(pos)
         self.size = size
         self.velocity = [0, 0]
         self.action = ''
-        self.anim_offset = (0,0)
+        self.anim_offset = (0, 0)
+        self._ground_frames = 0
         self.flip = False
         self.set_action('idle')
         self.collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
@@ -26,17 +27,19 @@ class PhysicsEntity:
     def rect(self):
         return pygame.Rect(*self.pos, *self.size)
 
+    @property
+    def grounded(self):
+        return self._ground_frames > 0
+
     def set_action(self, action):
         if action != self.action:
             self.action = action
             self.animation = self.game.assets[self.type + '/' + self.action].copy()
-            #self.animation.add_callback_func(10, lambda: self.animation.pause_animation())
-            #self.animation.set_backwards()
 
     def update(self, tilemap, movement):
         self.collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
         frame_movement = (movement[0] + self.velocity[0], movement[1] + self.velocity[1])
-        
+
         self.pos[0] += frame_movement[0]
         entity_rect = self.rect()
         for rect in tilemap.physics_rects_around(self.pos):
@@ -48,7 +51,7 @@ class PhysicsEntity:
                     entity_rect.left = rect.right
                     self.collisions['left'] = True
                 self.pos[0] = entity_rect.x
-                
+
         self.pos[1] += frame_movement[1]
         entity_rect = self.rect()
         for rect in tilemap.physics_rects_around(self.pos):
@@ -59,28 +62,32 @@ class PhysicsEntity:
                 if frame_movement[1] < 0:
                     entity_rect.top = rect.bottom
                     self.collisions['top'] = True
-                self.pos[1] = entity_rect.y + 8
+                self.pos[1] = entity_rect.y
 
         self.velocity = self.physics.gravity(self.velocity, 0.1, 5)
-        
+
         if self.collisions['top'] or self.collisions['bottom']:
             self.velocity[1] = 0
+
+        if self.collisions['bottom']:
+            self._ground_frames = 5
+        elif self._ground_frames > 0:
+            self._ground_frames -= 1
 
         if movement[0] > 0:
             self.flip = False
         if movement[0] < 0:
             self.flip = True
-        #self.animation.set_backwards()
+
         self.animation.update_frame()
 
-    def render(self, surf, offset = (0,0)):
-        if self.animation.is_finished():
-            #self.set_action('idle')
-            print('finished')
-        else:
-            surf.blit(pygame.transform.flip(self.animation.anim_image(), self.flip, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
+    def render(self, surf, offset=(0, 0)):
+        surf.blit(
+            pygame.transform.flip(self.animation.anim_image(), self.flip, False),
+            (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1])
+        )
 
-    def update_position(self, pos, offset = (0,0)):
+    def update_position(self, pos, offset=(0, 0)):
         self.pos = list(pos)
         self.render(self.game.display, offset)
 
@@ -88,15 +95,27 @@ class PhysicsEntity:
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
         super().__init__(game, 'player', pos, size)
+        # 128px sprite scaled to 32px; center it in the 24px-wide hitbox
+        self.anim_offset = (-4, 0)
 
-    def update(self, tilemap, movement=(0,0)):
+    def update(self, tilemap, movement=(0, 0)):
         super().update(tilemap, movement)
-
         if movement[0] != 0:
             self.set_action('run')
         else:
             self.set_action('idle')
 
 
+class Enemy:
+    def __init__(self, game, pos, size):
+        self.pos = list(pos)
+        self.size = size
+        self.flip = False
+        self.animation = game.assets['enemy/idle'].copy()
 
-        
+    def render(self, surf, offset=(0, 0)):
+        self.animation.update_frame()
+        surf.blit(
+            pygame.transform.flip(self.animation.anim_image(), self.flip, False),
+            (self.pos[0] - offset[0], self.pos[1] - offset[1])
+        )
