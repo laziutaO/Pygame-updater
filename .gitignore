@@ -11,6 +11,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+test-data/
 test-data1/
 .Python
 build/

@@ -1,11 +1,13 @@
-import pygame
+import math
 import os
 import sys
+import pygame
 from dotenv import load_dotenv
 load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
 from pygame_updater.physics.physics import PhysicsForces
+from pygame_updater.ai.search import SearchAction
 
 
 class PhysicsEntity:
@@ -27,6 +29,18 @@ class PhysicsEntity:
     def rect(self):
         return pygame.Rect(*self.pos, *self.size)
 
+    def _nearby_rects(self, tilemap):
+        seen = {}
+        for px, py in (
+            (self.pos[0],                self.pos[1]),
+            (self.pos[0] + self.size[0], self.pos[1]),
+            (self.pos[0],                self.pos[1] + self.size[1]),
+            (self.pos[0] + self.size[0], self.pos[1] + self.size[1]),
+        ):
+            for r in tilemap.physics_rects_around((px, py)):
+                seen[(r.x, r.y)] = r
+        return seen.values()
+
     @property
     def grounded(self):
         return self._ground_frames > 0
@@ -42,7 +56,7 @@ class PhysicsEntity:
 
         self.pos[0] += frame_movement[0]
         entity_rect = self.rect()
-        for rect in tilemap.physics_rects_around(self.pos):
+        for rect in self._nearby_rects(tilemap):
             if entity_rect.colliderect(rect):
                 if frame_movement[0] > 0:
                     entity_rect.right = rect.left
@@ -54,7 +68,7 @@ class PhysicsEntity:
 
         self.pos[1] += frame_movement[1]
         entity_rect = self.rect()
-        for rect in tilemap.physics_rects_around(self.pos):
+        for rect in self._nearby_rects(tilemap):
             if entity_rect.colliderect(rect):
                 if frame_movement[1] > 0:
                     entity_rect.bottom = rect.top
@@ -74,12 +88,12 @@ class PhysicsEntity:
         elif self._ground_frames > 0:
             self._ground_frames -= 1
 
-        if movement[0] > 0:
-            self.flip = False
-        if movement[0] < 0:
-            self.flip = True
+        self.update_flip(movement)
 
         self.animation.update_frame()
+
+    def update_flip(self, movement):
+        pass
 
     def render(self, surf, offset=(0, 0)):
         surf.blit(
@@ -92,30 +106,5 @@ class PhysicsEntity:
         self.render(self.game.display, offset)
 
 
-class Player(PhysicsEntity):
-    def __init__(self, game, pos, size):
-        super().__init__(game, 'player', pos, size)
-        # 128px sprite scaled to 32px; center it in the 24px-wide hitbox
-        self.anim_offset = (-4, 0)
-
-    def update(self, tilemap, movement=(0, 0)):
-        super().update(tilemap, movement)
-        if movement[0] != 0:
-            self.set_action('run')
-        else:
-            self.set_action('idle')
 
 
-class Enemy:
-    def __init__(self, game, pos, size):
-        self.pos = list(pos)
-        self.size = size
-        self.flip = False
-        self.animation = game.assets['enemy/idle'].copy()
-
-    def render(self, surf, offset=(0, 0)):
-        self.animation.update_frame()
-        surf.blit(
-            pygame.transform.flip(self.animation.anim_image(), self.flip, False),
-            (self.pos[0] - offset[0], self.pos[1] - offset[1])
-        )

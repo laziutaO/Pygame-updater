@@ -1,7 +1,7 @@
 import sys
 sys.path.append("/home/oleksii/kpi/diploma/soft/Pygame-updater")
 import pygame
-from classes.entities import *
+from classes import *
 import os
 import pygame_updater
 from dotenv import load_dotenv
