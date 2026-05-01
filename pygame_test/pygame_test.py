@@ -1,7 +1,7 @@
 import sys
 sys.path.append("/home/oleksii/kpi/diploma/soft/Pygame-updater")
 import pygame
-from classes import *
+from classes import Player, Enemy
 import os
 import pygame_updater
 from dotenv import load_dotenv
@@ -32,7 +32,6 @@ class Game:
         self.movement_ver = [False, False]
         self.assets = {
             'grass': load_images(BASE_IMG_PATH + 'images/tiles-objects/1 Tiles'),
-            #'stone': load_images(BASE_IMG_PATH + 'images/tiels-objects/Tiles/Tile_02.png'),
             'player': load_image( BASE_IMG_PATH + 'player/idle/row-1-column-1.png'),
             'player/idle': Animation(load_images(BASE_IMG_PATH + 'player/idle'), 5),
             'player/run': Animation(load_images(BASE_IMG_PATH + 'player/run'), 5),

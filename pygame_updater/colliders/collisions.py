@@ -1,3 +1,4 @@
+import math
 import pygame
 from typing import overload
 
@@ -18,9 +19,9 @@ class ComplexCollision:
             (x1, y1), (x2, y2) = edge
             if (yp < y1) != (yp < y2) and (xp < x1 + ((yp - y1) / (y2 - y1))* (x2 - x1)):
                 counter += 1
-    
+
         return counter % 2 == 1
-    
+
     def rect_collide_poly(self, polygon_coordinates: list, rect: pygame.Rect):
         return (
         self.__check_point_collision(polygon_coordinates, rect.x, rect.y) or
@@ -51,6 +52,162 @@ class ComplexCollision:
         collision_valid = (x1 - x2)**2 + (y1 - y2)**2 <= (radius1 + radius2)**2
         return collision_valid
 
-    
 
-    
+class Collision:
+    """Result of a narrow-phase test. `normal` is a unit vector pointing from body_a toward body_b."""
+    def __init__(self, body_a, body_b, normal=(0.0, 0.0), penetration=0.0, restitution=1.0):
+        self.body_a = body_a
+        self.body_b = body_b
+        self.normal = normal
+        self.penetration = penetration
+        self.restitution = restitution
+
+
+class CollisionSystem:
+    """Multi-body collision detection, event dispatch, and impulse resolution.
+
+    Body interface (duck-typed):
+      - rect (pygame.Rect)            : required, used by broad_phase
+      - shape (str, optional)         : 'rect' (default) | 'circle' | 'poly'
+      - center, radius                : required when shape == 'circle'
+      - points                        : required when shape == 'poly'
+    For resolve():
+      - mass (float; 0 = infinite/static)
+      - velocity (mutable [vx, vy])
+    """
+
+    def __init__(self):
+        self._cc = ComplexCollision()
+        self._enter_callbacks = []
+        self._exit_callbacks = []
+        self._active = {}
+
+    def on_collision_enter(self, callback):
+        self._enter_callbacks.append(callback)
+
+    def on_collision_exit(self, callback):
+        self._exit_callbacks.append(callback)
+
+    @staticmethod
+    def broad_phase(bodies):
+        """O(n^2) AABB sweep. Returns list of (body_a, body_b) pairs whose rects overlap."""
+        pairs = []
+        n = len(bodies)
+        for i in range(n):
+            for j in range(i + 1, n):
+                if bodies[i].rect.colliderect(bodies[j].rect):
+                    pairs.append((bodies[i], bodies[j]))
+        return pairs
+
+    def narrow_phase(self, body_a, body_b):
+        """Precise check between two bodies. Returns a Collision or None."""
+        sa = getattr(body_a, 'shape', 'rect')
+        sb = getattr(body_b, 'shape', 'rect')
+        if sa == 'rect' and sb == 'rect':
+            return self._rect_rect(body_a, body_b)
+        if sa == 'circle' and sb == 'circle':
+            return self._circle_circle(body_a, body_b)
+        if {sa, sb} == {'circle', 'rect'}:
+            circle = body_a if sa == 'circle' else body_b
+            rect_b = body_b if sa == 'circle' else body_a
+            return self._circle_rect(circle, rect_b, swap=(sa != 'circle'))
+        if {sa, sb} == {'poly', 'rect'}:
+            poly = body_a if sa == 'poly' else body_b
+            rect_b = body_b if sa == 'poly' else body_a
+            if self._cc.rect_collide_poly(poly.points, rect_b.rect):
+                return Collision(body_a, body_b)
+            return None
+        # unsupported pair: degrade to AABB
+        if body_a.rect.colliderect(body_b.rect):
+            return Collision(body_a, body_b)
+        return None
+
+    @staticmethod
+    def _rect_rect(a, b):
+        if not a.rect.colliderect(b.rect):
+            return None
+        ox = min(a.rect.right, b.rect.right) - max(a.rect.left, b.rect.left)
+        oy = min(a.rect.bottom, b.rect.bottom) - max(a.rect.top, b.rect.top)
+        if ox < oy:
+            normal = (1.0, 0.0) if a.rect.centerx < b.rect.centerx else (-1.0, 0.0)
+            penetration = ox
+        else:
+            normal = (0.0, 1.0) if a.rect.centery < b.rect.centery else (0.0, -1.0)
+            penetration = oy
+        return Collision(a, b, normal, penetration)
+
+    @staticmethod
+    def _circle_circle(a, b):
+        dx = b.center[0] - a.center[0]
+        dy = b.center[1] - a.center[1]
+        rs = a.radius + b.radius
+        d2 = dx * dx + dy * dy
+        if d2 > rs * rs:
+            return None
+        if d2 == 0:
+            return Collision(a, b, (1.0, 0.0), rs)
+        d = math.sqrt(d2)
+        return Collision(a, b, (dx / d, dy / d), rs - d)
+
+    def _circle_rect(self, circle, rect_b, swap):
+        if not self._cc.rect_collide_circle(circle.center, circle.radius, rect_b.rect):
+            return None
+        cx, cy = circle.center
+        nx = max(rect_b.rect.left, min(cx, rect_b.rect.right))
+        ny = max(rect_b.rect.top, min(cy, rect_b.rect.bottom))
+        dx, dy = cx - nx, cy - ny
+        d2 = dx * dx + dy * dy
+        if d2 == 0:
+            normal = (1.0, 0.0)
+            penetration = circle.radius
+        else:
+            d = math.sqrt(d2)
+            normal = (-dx / d, -dy / d)  # from circle toward rect
+            penetration = circle.radius - d
+        if swap:
+            return Collision(rect_b, circle, (-normal[0], -normal[1]), penetration)
+        return Collision(circle, rect_b, normal, penetration)
+
+    @staticmethod
+    def resolve(collision):
+        """Apply an impulse along collision.normal to separate the two bodies' velocities."""
+        if collision is None:
+            return
+        a, b = collision.body_a, collision.body_b
+        nx, ny = collision.normal
+        rvx = b.velocity[0] - a.velocity[0]
+        rvy = b.velocity[1] - a.velocity[1]
+        rel_n = rvx * nx + rvy * ny
+        if rel_n > 0:
+            return  # already separating
+        inv_a = 1.0 / a.mass if a.mass else 0.0
+        inv_b = 1.0 / b.mass if b.mass else 0.0
+        denom = inv_a + inv_b
+        if denom == 0:
+            return
+        j = -(1.0 + collision.restitution) * rel_n / denom
+        a.velocity[0] -= j * nx * inv_a
+        a.velocity[1] -= j * ny * inv_a
+        b.velocity[0] += j * nx * inv_b
+        b.velocity[1] += j * ny * inv_b
+
+    def step(self, bodies):
+        """Run broad+narrow over `bodies`, dispatch enter/exit callbacks, return list of Collisions."""
+        collisions = []
+        current = {}
+        for a, b in self.broad_phase(bodies):
+            collision = self.narrow_phase(a, b)
+            if collision is None:
+                continue
+            key = (id(a), id(b)) if id(a) < id(b) else (id(b), id(a))
+            current[key] = (a, b)
+            collisions.append(collision)
+            if key not in self._active:
+                for cb in self._enter_callbacks:
+                    cb(a, b)
+        for key, (a, b) in self._active.items():
+            if key not in current:
+                for cb in self._exit_callbacks:
+                    cb(a, b)
+        self._active = current
+        return collisions

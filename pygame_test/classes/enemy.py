@@ -59,6 +59,39 @@ class Enemy(PhysicsEntity):
         elif movement[0] > 0:
             self.flip = True
 
+    def _engage(self, dx):
+        # In melee range: face player and attack when ready. No movement, so the
+        # enemy doesn't oscillate around the player while waiting on cooldown.
+        self.flip = dx > 0
+        self._path = []
+        if self.attack_cooldown <= 0 and not self.attacking:
+            self.attacking = True
+            self.attack_cooldown = self.ATTACK_COOLDOWN
+            self._attack_hit_done = False
+            self.set_action('attack')
+
+    def _chase(self, player):
+        self._replan -= 1
+        if (self._replan <= 0 or not self._path
+                or self._path_idx >= len(self._path)):
+            new_path = self._search.search(
+                (int(self.pos[0]), int(self.pos[1])),
+                (int(player.pos[0]), int(player.pos[1])),
+            )
+            self._path = new_path or []
+            self._path_idx = 0
+            self._replan = self.REPLAN_INTERVAL
+        if len(self._path) < 2:
+            return 0
+        look = min(self._path_idx + self.LOOK_AHEAD, len(self._path) - 1)
+        target = self._path[look]
+        self._path_idx += 1
+        if target[0] > self.pos[0] + 2:
+            return self.SPEED
+        if target[0] < self.pos[0] - 2:
+            return -self.SPEED
+        return 0
+
     def update(self, tilemap, player):
         if self.dead:
             super().update(tilemap, (0, 0))
@@ -76,33 +109,10 @@ class Enemy(PhysicsEntity):
                 self.state = 'chase'
 
             if self.state == 'chase':
-                if (dist <= self.ATTACK_RANGE and self.attack_cooldown <= 0
-                        and not self.attacking):
-                    self.attacking = True
-                    self.attack_cooldown = self.ATTACK_COOLDOWN
-                    self._attack_hit_done = False
-                    self.flip = dx > 0
-                    self.set_action('attack')
-
-                if not self.attacking:
-                    self._replan -= 1
-                    if (self._replan <= 0 or not self._path
-                            or self._path_idx >= len(self._path)):
-                        new_path = self._search.search(
-                            (int(self.pos[0]), int(self.pos[1])),
-                            (int(player.pos[0]), int(player.pos[1])),
-                        )
-                        self._path = new_path or []
-                        self._path_idx = 0
-                        self._replan = self.REPLAN_INTERVAL
-                    if len(self._path) >= 2:
-                        look = min(self._path_idx + self.LOOK_AHEAD, len(self._path) - 1)
-                        target = self._path[look]
-                        if target[0] > self.pos[0] + 2:
-                            movement_x = self.SPEED
-                        elif target[0] < self.pos[0] - 2:
-                            movement_x = -self.SPEED
-                        self._path_idx += 1
+                if dist <= self.ATTACK_RANGE:
+                    self._engage(dx)
+                elif not self.attacking:
+                    movement_x = self._chase(player)
 
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
