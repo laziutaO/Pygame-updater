@@ -14,6 +14,8 @@ __pycache__/
 test-data/
 test-data1/
 claude.md
+*.md
+*.puml
 .Python
 build/
 develop-eggs/

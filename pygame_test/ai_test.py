@@ -14,8 +14,6 @@ import pygame
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pygame_updater.ai.search.astar import astar, GridGraph
-from pygame_updater.ai.search.bfs import bfs
-from pygame_updater.ai.search.dijkstra import dijkstra
 from pygame_updater.ai.search.jps import jps
 from pygame_updater.ai.steering.seek import Seek
 from pygame_updater.ai.steering.wander import Wander
@@ -122,7 +120,7 @@ class PathfindScene(GridScene):
     def __init__(self, surface, font):
         super().__init__(surface, font)
         self.start = (1, 1)
-        self.graph = GridGraph(self.passable, allow_diagonal=True)
+        self.graph = GridGraph(self.passable, allow_diagonal=False)
 
     def is_protected(self, cell):
         return cell == self.start
@@ -152,20 +150,6 @@ class AStarScene(PathfindScene):
 
     def search(self, start, end):
         return astar(self.graph, start, end)
-
-
-class BFSScene(PathfindScene):
-    title = 'bfs'
-
-    def search(self, start, end):
-        return bfs(self.graph, start, end)
-
-
-class DijkstraScene(PathfindScene):
-    title = 'dijkstra'
-
-    def search(self, start, end):
-        return dijkstra(self.graph, start, end)
 
 
 class JPSScene(PathfindScene):
@@ -344,8 +328,6 @@ class SmoothingScene(GridScene):
 
 SCENES = [
     AStarScene,
-    BFSScene,
-    DijkstraScene,
     JPSScene,
     SeekScene,
     WanderScene,

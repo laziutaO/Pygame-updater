@@ -1,10 +1,3 @@
-"""Demos for every collision type in pygame_updater.colliders.collisions.
-
-Run from project root:
-    python pygame_test/collisions_test.py
-
-Each scene exercises one function. ESC returns to the menu / quits.
-"""
 import os
 import sys
 

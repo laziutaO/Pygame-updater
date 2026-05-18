@@ -23,12 +23,44 @@ class ComplexCollision:
         return counter % 2 == 1
 
     def rect_collide_poly(self, polygon_coordinates: list, rect: pygame.Rect):
-        return (
-        self.__check_point_collision(polygon_coordinates, rect.x, rect.y) or
-        self.__check_point_collision(polygon_coordinates, rect.x + rect.width, rect.y) or
-        self.__check_point_collision(polygon_coordinates, rect.x, rect.y + rect.height) or
-        self.__check_point_collision(polygon_coordinates, rect.x + rect.width, rect.y + rect.height)
-    )
+        corners = (
+            (rect.x,              rect.y),
+            (rect.x + rect.width, rect.y),
+            (rect.x,              rect.y + rect.height),
+            (rect.x + rect.width, rect.y + rect.height),
+        )
+        # (1) any rect corner inside the polygon
+        for cx, cy in corners:
+            if self.__check_point_collision(polygon_coordinates, cx, cy):
+                return True
+        # (2) any polygon vertex inside the rect (catches "polygon inside rect")
+        for vx, vy in polygon_coordinates:
+            if rect.collidepoint(vx, vy):
+                return True
+        # (3) any rect edge crosses any polygon edge (catches X-shaped overlap)
+        rect_edges = (
+            (corners[0], corners[1]),  # top
+            (corners[1], corners[3]),  # right
+            (corners[3], corners[2]),  # bottom
+            (corners[2], corners[0]),  # left
+        )
+        for ra, rb in rect_edges:
+            for pa, pb in self.__split_to_edges(polygon_coordinates):
+                if self.__segments_intersect(ra, rb, pa, pb):
+                    return True
+        return False
+
+    @staticmethod
+    def __segments_intersect(p1, p2, p3, p4):
+        # Sign of the cross product (p2-p1) x (c-p1); 0 = collinear.
+        def ccw(a, b, c):
+            return (c[1] - a[1]) * (b[0] - a[0]) - (b[1] - a[1]) * (c[0] - a[0])
+        d1 = ccw(p3, p4, p1)
+        d2 = ccw(p3, p4, p2)
+        d3 = ccw(p1, p2, p3)
+        d4 = ccw(p1, p2, p4)
+        return (((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0))
+                and ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0)))
 
 
     def rect_collide_circle(self, circle_center: tuple, radius: float, rect: pygame.Rect):
