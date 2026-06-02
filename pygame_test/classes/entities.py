@@ -7,7 +7,6 @@ load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
 from pygame_updater.physics.physics import PhysicsForces
-from pygame_updater.ai.search import SearchAction
 
 
 class PhysicsEntity:
@@ -50,7 +49,7 @@ class PhysicsEntity:
             self.action = action
             self.animation = self.game.assets[self.type + '/' + self.action].copy()
 
-    def update(self, tilemap, movement):
+    def update(self, tilemap, movement, dt):
         self.collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
         frame_movement = (movement[0] + self.velocity[0], movement[1] + self.velocity[1])
 
@@ -90,7 +89,7 @@ class PhysicsEntity:
 
         self.update_flip(movement)
 
-        self.animation.update_frame()
+        self.animation.update_frame(dt)
 
     def update_flip(self, movement):
         pass

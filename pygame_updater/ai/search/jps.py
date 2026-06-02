@@ -1,18 +1,10 @@
-"""Jump Point Search for uniform-cost 8-connected grids.
-
-Skips intermediate cells by recursing along directions until a "jump point"
-(forced neighbor or goal) is found, then runs A* over those jump points.
-The returned path contains jump points only — interpolate between them to get
-per-cell waypoints if needed.
-"""
 import heapq
 import math
+from .astar import GridGraph, euclidean, reconstruct_path
 
-from .astar import euclidean, reconstruct_path
 
-
-def jps(graph, start, end, heuristic=euclidean):
-    """Returns list of jump points start..end inclusive, or None."""
+def jps(graph: GridGraph, start: tuple, end: tuple, heuristic=euclidean):
+    """Returns list of jump points, or None."""
     start, end = tuple(start), tuple(end)
     if not graph.is_clear(start) or not graph.is_clear(end):
         return None
@@ -77,8 +69,8 @@ def jps(graph, start, end, heuristic=euclidean):
 
 
 class JPS:
-    def __init__(self, graph):
+    def __init__(self, graph: GridGraph):
         self.graph = graph
 
-    def search(self, start, end):
+    def search(self, start: tuple, end: tuple):
         return jps(self.graph, start, end)

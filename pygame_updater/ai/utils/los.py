@@ -1,7 +1,6 @@
-"""Line-of-sight check via Bresenham. `blocked_fn(cell)` reports whether a cell is solid."""
 
-
-def line_of_sight(start, end, blocked_fn):
+def line_of_sight(start: tuple, end: tuple, blocked_fn: callable) -> bool:
+    """Line-of-sight check via Bresenham. `blocked_fn(cell)` reports whether a cell is solid."""
     x0, y0 = int(start[0]), int(start[1])
     x1, y1 = int(end[0]), int(end[1])
     dx = abs(x1 - x0)

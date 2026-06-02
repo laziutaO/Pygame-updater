@@ -7,7 +7,6 @@ load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
 from pygame_updater.physics.physics import PhysicsForces
-from pygame_updater.ai.search import SearchAction
 from classes.entities import PhysicsEntity
 
 
@@ -57,12 +56,12 @@ class Player(PhysicsEntity):
         elif movement[0] < 0:
             self.flip = True
 
-    def update(self, tilemap, movement=(0, 0), enemies=None):
+    def update(self, tilemap, dt, movement=(0, 0), enemies=None):
         if self.dead:
-            super().update(tilemap, (0, 0))
+            super().update(tilemap, (0, 0), dt)
             return
 
-        super().update(tilemap, movement)
+        super().update(tilemap, movement, dt)
 
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1

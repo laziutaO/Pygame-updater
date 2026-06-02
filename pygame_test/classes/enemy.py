@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 MODULE_PATH = os.getenv('MODULE_PATH')
 sys.path.insert(1, MODULE_PATH)
-from pygame_updater.ai.search.astar import SearchAction
+from pygame_updater.ai.search.astar import AStar, GridGraph
 from classes.entities import PhysicsEntity
 
 class Enemy(PhysicsEntity):
@@ -15,7 +15,7 @@ class Enemy(PhysicsEntity):
     ATTACK_RANGE = 40
     ATTACK_DAMAGE = 10
     ATTACK_COOLDOWN = 60
-    ATTACK_HIT_FRAME = 12
+    ATTACK_HIT_FRAME = 1
     SPEED = 1
     REPLAN_INTERVAL = 30
     LOOK_AHEAD = 8
@@ -30,7 +30,10 @@ class Enemy(PhysicsEntity):
         self.attack_cooldown = 0
         self._attack_hit_done = False
         self.state = 'idle'
-        self._search = SearchAction(int(size[0]), int(size[1]), game.tilemap)
+        self._search = AStar(GridGraph(
+            lambda cell: not game.tilemap.is_occupied_tile(cell),
+            entity_size=(int(size[0]), int(size[1])),
+        ))
         self._path = []
         self._path_idx = 0
         self._replan = 0
@@ -47,7 +50,6 @@ class Enemy(PhysicsEntity):
             self.set_action('death')
 
     def _attack_hitbox(self):
-        # enemy convention: flip=True means facing right
         if self.flip:
             return pygame.Rect(self.pos[0] + self.size[0], self.pos[1], self.ATTACK_RANGE, self.size[1])
         return pygame.Rect(self.pos[0] - self.ATTACK_RANGE, self.pos[1], self.ATTACK_RANGE, self.size[1])
@@ -59,8 +61,6 @@ class Enemy(PhysicsEntity):
             self.flip = True
 
     def _engage(self, dx):
-        # In melee range: face player and attack when ready. No movement, so the
-        # enemy doesn't oscillate around the player while waiting on cooldown.
         self.flip = dx > 0
         self._path = []
         if self.attack_cooldown <= 0 and not self.attacking:
@@ -91,9 +91,9 @@ class Enemy(PhysicsEntity):
             return -self.SPEED
         return 0
 
-    def update(self, tilemap, player):
+    def update(self, tilemap, player, dt):
         if self.dead:
-            super().update(tilemap, (0, 0))
+            super().update(tilemap, (0, 0), dt)
             if self.animation.is_finished():
                 self.death_complete = True
             return
@@ -116,7 +116,7 @@ class Enemy(PhysicsEntity):
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
 
-        super().update(tilemap, (0 if self.attacking else movement_x, 0))
+        super().update(tilemap, (0 if self.attacking else movement_x, 0), dt)
 
         if self.attacking:
             if not self._attack_hit_done and self.animation.get_frame() >= self.ATTACK_HIT_FRAME:

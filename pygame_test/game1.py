@@ -20,18 +20,19 @@ class Game:
         self.screen  = pygame.display.set_mode((640, 480))
         self.display = pygame.Surface((320, 240))
         self.clock   = pygame.time.Clock()
+        self.dt = 0
 
         tiles_path = os.path.join(ASSETS, 'images', 'tiles-objects', '1 Tiles')
         self.assets = {
             'tile':          load_images(tiles_path),
-            'player/idle':   Animation(load_images(os.path.join(ASSETS, 'player', 'idle')),   6, scale=0.5),
-            'player/run':    Animation(load_images(os.path.join(ASSETS, 'player', 'run')),    4, scale=0.5),
-            'player/attack': Animation(load_images(os.path.join(ASSETS, 'player', 'attack')), 4, loop=False, scale=0.5),
-            'player/death':  Animation(load_images(os.path.join(ASSETS, 'player', 'death')),  8, loop=False, scale=0.5),
-            'enemy/idle':    Animation(load_images(os.path.join(ASSETS, 'enemies', 'idle')),    8),
-            'enemy/walking': Animation(load_images(os.path.join(ASSETS, 'enemies', 'walking')), 6),
-            'enemy/attack':  Animation(load_images(os.path.join(ASSETS, 'enemies', 'attack')),  4, loop=False),
-            'enemy/death':   Animation(load_images(os.path.join(ASSETS, 'enemies', 'death')),   8, loop=False),
+            'player/idle':   Animation(load_images(os.path.join(ASSETS, 'player', 'idle')),  0.1, scale=0.5),
+            'player/run':    Animation(load_images(os.path.join(ASSETS, 'player', 'run')),    0.1, scale=0.5),
+            'player/attack': Animation(load_images(os.path.join(ASSETS, 'player', 'attack')), 0.1, loop=False, scale=0.5),
+            'player/death':  Animation(load_images(os.path.join(ASSETS, 'player', 'death')),  0.1, loop=False, scale=0.5),
+            'enemy/idle':    Animation(load_images(os.path.join(ASSETS, 'enemies', 'idle')),    0.1),
+            'enemy/walking': Animation(load_images(os.path.join(ASSETS, 'enemies', 'walking')), 0.1),
+            'enemy/attack':  Animation(load_images(os.path.join(ASSETS, 'enemies', 'attack')),  0.1, loop=False),
+            'enemy/death':   Animation(load_images(os.path.join(ASSETS, 'enemies', 'death')),   0.1, loop=False),
         }
         self.background = pygame.transform.scale(
             pygame.image.load(
@@ -39,11 +40,7 @@ class Game:
             ).convert(),
             self.display.get_size()
         )
-
-        # --- level layout (tile coords, tile_size=32) ---
-        # y=7: ground spanning the full level width
-        # y=5: first platform (reachable in one jump)
-        # y=3: second platform (reachable from platform 1)
+        
         self.tilemap = Tilemap(TILE_SIZE, ['tile'])
         for x in range(20):
             self.tilemap.place_tile_ongrid((x, 7), 'tile', 0)
@@ -73,11 +70,11 @@ class Game:
             self.tilemap.render(self.display, self.assets, offset=render_scroll)
 
             move_x = self.movement[1] - self.movement[0]
-            self.player.update(self.tilemap, (move_x, 0), self.enemies)
+            self.player.update(self.tilemap, self.dt, (move_x, 0), self.enemies)
             self.player.render(self.display, offset=render_scroll)
 
             for enemy in self.enemies:
-                enemy.update(self.tilemap, self.player)
+                enemy.update(self.tilemap, self.player, self.dt)
                 enemy.render(self.display, offset=render_scroll)
             self.enemies = [e for e in self.enemies if not e.death_complete]
 
@@ -103,7 +100,7 @@ class Game:
 
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()
-            self.clock.tick(60)
+            self.dt = self.clock.tick(60)/1000.0
 
 
 if __name__ == '__main__':

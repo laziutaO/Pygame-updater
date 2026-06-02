@@ -11,7 +11,7 @@ from pygame_updater.colliders.collisions import (
 )
 
 
-SCREEN_W, SCREEN_H = 640, 480
+SCREEN_W, SCREEN_H = 1280, 720
 FPS = 60
 
 WHITE  = (240, 240, 240)
@@ -142,8 +142,6 @@ class CircleCircleScene(Scene):
         self.label(f'{self.title}  -  move mouse')
         self.label(f'colliding={hit}', (10, 30))
 
-
-# ---------- CollisionSystem ----------
 
 class BroadPhaseScene(Scene):
     title = 'broad_phase'

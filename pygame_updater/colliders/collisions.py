@@ -1,9 +1,9 @@
 import math
 import pygame
-from typing import overload
+from typing import Protocol
 
 class ComplexCollision:
-    def __split_to_edges(self, points):
+    def __split_to_edges(self, points: list) -> list[tuple[tuple, tuple]]:
         edges = []
         for i in range(len(points)-1):
             edges.append((points[i], points[(i + 1)]))
@@ -11,8 +11,7 @@ class ComplexCollision:
 
         return edges
 
-    def __check_point_collision(self, points, xp, yp):
-        #ray casting algorithm
+    def __check_point_collision(self, points: list, xp: float, yp: float) -> bool:
         edges = self.__split_to_edges(points)
         counter = 0
         for edge in edges:
@@ -29,15 +28,13 @@ class ComplexCollision:
             (rect.x,              rect.y + rect.height),
             (rect.x + rect.width, rect.y + rect.height),
         )
-        # (1) any rect corner inside the polygon
         for cx, cy in corners:
             if self.__check_point_collision(polygon_coordinates, cx, cy):
                 return True
-        # (2) any polygon vertex inside the rect (catches "polygon inside rect")
         for vx, vy in polygon_coordinates:
             if rect.collidepoint(vx, vy):
                 return True
-        # (3) any rect edge crosses any polygon edge (catches X-shaped overlap)
+
         rect_edges = (
             (corners[0], corners[1]),  # top
             (corners[1], corners[3]),  # right
@@ -51,19 +48,19 @@ class ComplexCollision:
         return False
 
     @staticmethod
-    def __segments_intersect(p1, p2, p3, p4):
-        # Sign of the cross product (p2-p1) x (c-p1); 0 = collinear.
+    def __segments_intersect(pr1: tuple, pr2: tuple, pp3: tuple, pp4: tuple) -> bool:
+        """Using cross product orientation test(to determine if point lies ot the left, right or on the line)"""
         def ccw(a, b, c):
             return (c[1] - a[1]) * (b[0] - a[0]) - (b[1] - a[1]) * (c[0] - a[0])
-        d1 = ccw(p3, p4, p1)
-        d2 = ccw(p3, p4, p2)
-        d3 = ccw(p1, p2, p3)
-        d4 = ccw(p1, p2, p4)
+        d1 = ccw(pp3, pp4, pr1)
+        d2 = ccw(pp3, pp4, pr2)
+        d3 = ccw(pr1, pr2, pp3)
+        d4 = ccw(pr1, pr2, pp4)
         return (((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0))
                 and ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0)))
 
 
-    def rect_collide_circle(self, circle_center: tuple, radius: float, rect: pygame.Rect):
+    def rect_collide_circle(self, circle_center: tuple, radius: float, rect: pygame.Rect) -> bool:
         x, y = circle_center
         closest_x = max(rect.x, min(x, rect.x + rect.width))
         closest_y = max(rect.y, min(y, rect.y + rect.height))
@@ -75,10 +72,10 @@ class ComplexCollision:
 
         return distance_squared <= (radius * radius)
 
-    def point_collide_poly(self, polygon_coordinates: list, point: tuple):
+    def point_collide_poly(self, polygon_coordinates: list, point: tuple) -> bool:
         return self.__check_point_collision(polygon_coordinates, point[0], point[1])
 
-    def collide_circles(self, circle1_center: tuple, radius1: float, circle2_center: tuple, radius2: float):
+    def collide_circles(self, circle1_center: tuple, radius1: float, circle2_center: tuple, radius2: float) -> bool:
         x1, y1 = circle1_center
         x2, y2 = circle2_center
         collision_valid = (x1 - x2)**2 + (y1 - y2)**2 <= (radius1 + radius2)**2
@@ -95,18 +92,11 @@ class Collision:
         self.restitution = restitution
 
 
-class CollisionSystem:
-    """Multi-body collision detection, event dispatch, and impulse resolution.
+class CircleLike(Protocol):
+    center: tuple[float, float]
+    radius: float
 
-    Body interface (duck-typed):
-      - rect (pygame.Rect)            : required, used by broad_phase
-      - shape (str, optional)         : 'rect' (default) | 'circle' | 'poly'
-      - center, radius                : required when shape == 'circle'
-      - points                        : required when shape == 'poly'
-    For resolve():
-      - mass (float; 0 = infinite/static)
-      - velocity (mutable [vx, vy])
-    """
+class CollisionSystem:
 
     def __init__(self):
         self._cc = ComplexCollision()
@@ -114,15 +104,15 @@ class CollisionSystem:
         self._exit_callbacks = []
         self._active = {}
 
-    def on_collision_enter(self, callback):
+    def on_collision_enter(self, callback: callable):
         self._enter_callbacks.append(callback)
 
-    def on_collision_exit(self, callback):
+    def on_collision_exit(self, callback: callable):
         self._exit_callbacks.append(callback)
 
     @staticmethod
-    def broad_phase(bodies):
-        """O(n^2) AABB sweep. Returns list of (body_a, body_b) pairs whose rects overlap."""
+    def broad_phase(bodies: list) -> list[tuple]:
+        """Returns list of (body_a, body_b) pairs whose rects overlap."""
         pairs = []
         n = len(bodies)
         for i in range(n):
@@ -131,7 +121,7 @@ class CollisionSystem:
                     pairs.append((bodies[i], bodies[j]))
         return pairs
 
-    def narrow_phase(self, body_a, body_b):
+    def narrow_phase(self, body_a, body_b) -> Collision | None:
         """Precise check between two bodies. Returns a Collision or None."""
         sa = getattr(body_a, 'shape', 'rect')
         sb = getattr(body_b, 'shape', 'rect')
@@ -149,13 +139,14 @@ class CollisionSystem:
             if self._cc.rect_collide_poly(poly.points, rect_b.rect):
                 return Collision(body_a, body_b)
             return None
+        
         # unsupported pair: degrade to AABB
         if body_a.rect.colliderect(body_b.rect):
             return Collision(body_a, body_b)
         return None
 
     @staticmethod
-    def _rect_rect(a, b):
+    def _rect_rect(a, b) -> Collision | None:
         if not a.rect.colliderect(b.rect):
             return None
         ox = min(a.rect.right, b.rect.right) - max(a.rect.left, b.rect.left)
@@ -169,7 +160,7 @@ class CollisionSystem:
         return Collision(a, b, normal, penetration)
 
     @staticmethod
-    def _circle_circle(a, b):
+    def _circle_circle(a: CircleLike, b: CircleLike) -> Collision | None:
         dx = b.center[0] - a.center[0]
         dy = b.center[1] - a.center[1]
         rs = a.radius + b.radius
@@ -181,7 +172,7 @@ class CollisionSystem:
         d = math.sqrt(d2)
         return Collision(a, b, (dx / d, dy / d), rs - d)
 
-    def _circle_rect(self, circle, rect_b, swap):
+    def _circle_rect(self, circle: CircleLike, rect_b: pygame.Rect, swap=False) -> Collision | None:
         if not self._cc.rect_collide_circle(circle.center, circle.radius, rect_b.rect):
             return None
         cx, cy = circle.center
@@ -194,15 +185,15 @@ class CollisionSystem:
             penetration = circle.radius
         else:
             d = math.sqrt(d2)
-            normal = (-dx / d, -dy / d)  # from circle toward rect
+            normal = (-dx / d, -dy / d)  
             penetration = circle.radius - d
         if swap:
             return Collision(rect_b, circle, (-normal[0], -normal[1]), penetration)
         return Collision(circle, rect_b, normal, penetration)
 
     @staticmethod
-    def resolve(collision):
-        """Apply an impulse along collision.normal to separate the two bodies' velocities."""
+    def resolve(collision:Collision):
+        """Apply an impulse to separate two bodies"""
         if collision is None:
             return
         a, b = collision.body_a, collision.body_b
@@ -223,8 +214,8 @@ class CollisionSystem:
         b.velocity[0] += j * nx * inv_b
         b.velocity[1] += j * ny * inv_b
 
-    def step(self, bodies):
-        """Run broad+narrow over `bodies`, dispatch enter/exit callbacks, return list of Collisions."""
+    def step(self, bodies: list)-> list[Collision]:
+        """Run broad+narrow over bodies, return list of Collisions."""
         collisions = []
         current = {}
         for a, b in self.broad_phase(bodies):

@@ -1,10 +1,3 @@
-"""Demos for every function/class in pygame_updater/ai.
-
-Run from project root:
-    python pygame_test/ai_test.py
-
-Each scene exercises one AI primitive. ESC returns to the menu / quits.
-"""
 import os
 import random
 import sys
@@ -22,11 +15,11 @@ from pygame_updater.ai.utils.los import line_of_sight
 from pygame_updater.ai.utils.smoothing import smooth_path
 
 
-SCREEN_W, SCREEN_H = 640, 480
+SCREEN_W, SCREEN_H = 1280, 720
 FPS = 60
 CELL = 32
-GRID_W = SCREEN_W // CELL   # 20
-GRID_H = SCREEN_H // CELL   # 15
+GRID_W = SCREEN_W // CELL   
+GRID_H = SCREEN_H // CELL   
 
 WHITE  = (240, 240, 240)
 BLACK  = (15, 15, 15)
@@ -59,8 +52,6 @@ class Scene:
     def label(self, text, pos=(10, 10), color=WHITE):
         self.surface.blit(self.font.render(text, True, color), pos)
 
-
-# ---------- Grid base ----------
 
 class GridScene(Scene):
     """Shared grid + wall-toggle behavior."""
@@ -107,8 +98,6 @@ class GridScene(Scene):
                     pygame.draw.rect(self.surface, GRAY, rect)
                 pygame.draw.rect(self.surface, DIM, rect, 1)
 
-
-# ---------- Pathfinding ----------
 
 class PathfindScene(GridScene):
     title = 'pathfind'
@@ -159,8 +148,6 @@ class JPSScene(PathfindScene):
         return jps(self.graph, start, end)
 
 
-# ---------- Steering ----------
-
 class SeekScene(Scene):
     title = 'Seek (mouse = target; arrives at slow_radius)'
 
@@ -190,7 +177,7 @@ class WanderScene(Scene):
 
     def __init__(self, surface, font):
         super().__init__(surface, font)
-        self.wander = Wander(max_speed=140.0, jitter=0.35,
+        self.wander = Wander(max_speed=140.0, jitter=0.25,
                              wander_radius=24.0, wander_distance=36.0)
         self.pos = [SCREEN_W / 2, SCREEN_H / 2]
         self.heading = (1.0, 0.0)
@@ -216,8 +203,6 @@ class WanderScene(Scene):
             pygame.draw.circle(self.surface, YELLOW, self.trail[-1], 8, 2)
         self.label(self.title)
 
-
-# ---------- Navigation ----------
 
 class FlowFieldScene(GridScene):
     title = 'FlowField (left-click toggles wall; mouse = goal)'
@@ -262,8 +247,6 @@ class FlowFieldScene(GridScene):
                                self.cell_center(self.last_target), 8, 2)
         self.label(self.title)
 
-
-# ---------- Utils ----------
 
 class LoSScene(GridScene):
     title = 'line_of_sight (left-click toggles wall)'
@@ -323,8 +306,6 @@ class SmoothingScene(GridScene):
         smooth_n = len(smooth) if smooth else 0
         self.label(f'raw={raw_n}  smoothed={smooth_n}', (10, 30))
 
-
-# ---------- Menu / launcher ----------
 
 SCENES = [
     AStarScene,

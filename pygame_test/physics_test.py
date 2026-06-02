@@ -1,10 +1,3 @@
-"""Demos for every force/method in pygame_updater/physics.
-
-Run from project root:
-    python pygame_test/physics_test.py
-
-Each scene exercises one method of PhysicsForces. ESC returns to the menu / quits.
-"""
 import math
 import os
 import sys
@@ -16,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from pygame_updater.physics.physics import PhysicsForces
 
 
-SCREEN_W, SCREEN_H = 640, 480
+SCREEN_W, SCREEN_H = 1280, 720
 FPS = 60
 
 WHITE  = (240, 240, 240)
@@ -51,8 +44,6 @@ class Scene:
     def label(self, text, pos=(10, 10), color=WHITE):
         self.surface.blit(self.font.render(text, True, color), pos)
 
-
-# ---------- gravity / jump ----------
 
 class GravityScene(Scene):
     title = 'gravity (a=800, terminal=400; SPACE = reset)'
@@ -115,8 +106,6 @@ class JumpScene(Scene):
         self.label(self.title)
         self.label(f'vy={self.velocity[1]:.1f}  grounded={self.grounded}', (10, 30))
 
-
-# ---------- impulse / force / acceleration ----------
 
 class ApplyImpulseScene(Scene):
     title = 'apply_impulse (click = impulse; heavier = slower)'
@@ -219,8 +208,6 @@ class ApplyAccelScene(Scene):
         self.label(f'speed={speed:.1f}', (10, 30))
 
 
-# ---------- shared base for decay forces ----------
-
 class LaunchScene(Scene):
     """Click anywhere to launch the ball at `launch_speed` toward the click."""
     title = 'launch'
@@ -270,9 +257,6 @@ class DragScene(LaunchScene):
     def apply_decay(self, dt):
         self.physics.drag(self.velocity, 0.005, dt=dt)
 
-
-
-# ---------- clamp / knockback / bounce ----------
 
 class ClampSpeedScene(Scene):
     title = 'clamp_speed (max=250; arrow keys accelerate)'
@@ -336,7 +320,7 @@ class KnockbackScene(Scene):
 
 
 class BounceScene(Scene):
-    title = 'bounce (walls; 1/2/3 = e=1.0/0.7/0.4)'
+    title = 'bounce'
 
     def __init__(self, surface, font):
         super().__init__(surface, font)
@@ -387,7 +371,7 @@ class BounceScene(Scene):
 
 
 class UpdatePositionScene(Scene):
-    title = 'update_position (semi-implicit Euler step)'
+    title = 'update_position'
 
     def __init__(self, surface, font):
         super().__init__(surface, font)
@@ -414,8 +398,6 @@ class UpdatePositionScene(Scene):
         self.label(f'pos=({self.pos[0]:.1f}, {self.pos[1]:.1f})  '
                    f'v=({self.velocity[0]:.0f}, {self.velocity[1]:.0f})', (10, 30))
 
-
-# ---------- menu / launcher ----------
 
 SCENES = [
     GravityScene,
@@ -448,7 +430,6 @@ class Menu:
             if event.key == pygame.K_ESCAPE:
                 self.done = True
                 return
-            # 1..9 and 0..4 to cover up to 14 scenes
             if pygame.K_1 <= event.key <= pygame.K_9:
                 idx = event.key - pygame.K_1
             elif event.key == pygame.K_0:

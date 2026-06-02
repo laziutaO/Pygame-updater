@@ -13,7 +13,6 @@ __pycache__/
 # Distribution / packaging
 test-data/
 test-data1/
-claude.md
 *.md
 *.puml
 .Python

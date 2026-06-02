@@ -1,22 +1,21 @@
-"""Wander steering: smooth random meandering, Reynolds-style.
-
-Holds a `_wander_angle` that jitters a little each frame, projected onto a circle
-ahead of the agent — gives gradual direction change instead of teleport-randomness.
-"""
 import math
 import random
 
 
 class Wander:
-    def __init__(self, max_speed=2.0, jitter=0.2,
-                 wander_radius=20.0, wander_distance=30.0):
+    """Wander steering: smooth random meandering.
+Holds a `_wander_angle` that jitters a little each frame, projected onto a circle
+ahead of the agent — gives gradual direction change instead of teleport-randomness.
+"""
+    def __init__(self, max_speed:float=2.0, jitter:float=0.2,
+                 wander_radius:float=20.0, wander_distance:float=30.0):
         self.max_speed = max_speed
         self.jitter = jitter
         self.wander_radius = wander_radius
         self.wander_distance = wander_distance
         self._wander_angle = random.uniform(0, math.tau)
 
-    def velocity(self, pos, heading=(1.0, 0.0)):
+    def velocity(self, pos: tuple, heading: tuple=(1.0, 0.0)):
         hx, hy = heading
         h_mag = math.hypot(hx, hy)
         if h_mag == 0:

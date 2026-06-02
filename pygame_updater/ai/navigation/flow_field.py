@@ -1,9 +1,6 @@
-"""Flow field navigation. Build once toward a target, query per-cell direction.
-
-Useful when many agents share one destination — beats running A* per agent.
-"""
 import heapq
 import math
+from typing import Protocol
 
 
 class FlowField:
